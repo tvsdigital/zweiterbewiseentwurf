@@ -2460,6 +2460,9 @@ footer, .footer {
 <!-- ═══════════════════════════════════════════════
      STELLENANGEBOTE (Clean & Custom Styled - Fixed)
 ════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════
+     SECTION: STELLENANGEBOTE (Optimiertes Zoho Widget)
+════════════════════════════════════════════════ -->
 <section id="stellenangebote" aria-labelledby="jobs-headline">
   <div class="jobs-inner">
     <div class="jobs-header reveal">
@@ -2496,22 +2499,23 @@ footer, .footer {
     margin-bottom: 40px;
   }
 
-  /* 1. ZOHO HEADER & FILTER KOMPLETT AUSBLENDEN */
+  /* 1. ZOHO HEADER, FILTER & FILTER-TEXTE KOMPLETT AUSBLENDEN */
   .zoho-custom-wrapper iframe, 
-  #rec_job_listing_div iframe {
-    width: 100% !important;
-    border: none !important;
+  #rec_job_listing_div iframe,
+  .embed_jobs_head,
+  .rec-job-search,
+  .rec-search-container,
+  .rec-job-type-label,
+  [data-meta="jobtype"] {
+    display: none !important;
   }
 
-  /* 2. ERZWUNGENES STYLING FÜR DIE ZOHO INTERNEN ELEMENTE (CSS-Injection-Simulation) */
-  /* Zoho baut ein iFrame, dessen Styles wir über die offizielle Markenfarbe im JS steuern. */
-  /* Um sicherzustellen, dass das Layout sauber sitzt, geben wir dem Container Luft: */
   #rec_job_listing_div {
     width: 100% !important;
     min-height: auto !important;
   }
 
-  /* Falls Zoho Elemente direkt im DOM platziert (je nach Widget-Version): */
+  /* 2. KARTEN-STYLING */
   .rec-job-title, .cw-job-title {
     font-size: 1.25rem !important;
     font-weight: 600 !important;
@@ -2533,6 +2537,14 @@ footer, .footer {
     box-shadow: 0 12px 24px rgba(201, 185, 154, 0.15) !important;
     border-color: rgba(201, 185, 154, 0.3) !important;
   }
+
+  /* 3. NUR DIE 5 NEUESTEN STELLEN ANZEIGEN */
+  /* Blendete alle Jobelemente ab dem 6. Element rigoros aus */
+  .rec-job-list:nth-child(n+6), 
+  .cw-job-card:nth-child(n+6),
+  #rec_job_listing_div li:nth-child(n+6) {
+    display: none !important;
+  }
 </style>
 
 <script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
@@ -2543,10 +2555,46 @@ footer, .footer {
       page_name: "Karriere",
       source: "CareerSite",
       site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#C9B99A", // Nutzt direkt deine edle Gold/Beige-Markenfarbe für Buttons/Links in Zoho!
-      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen."
+      brand_color: "#C9B99A",
+      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
+      // native Zoho-Filterung aktivieren
+      per_page: 5,
+      sort_by: "date_posted",
+      sort_order: "desc"
     });
   }
+
+  // 4. DATUM & VOLLZEIT MIT " I " TRENNEN
+  // Da Zoho das Datum und den Typ als rohen Text zusammenklatscht, trennen wir es per JavaScript sauber auf
+  const formatZohoMeta = () => {
+    // Suche nach typischen Datums-Containern von Zoho
+    const dateElements = document.querySelectorAll('.rec-job-date, .cw-job-date');
+    
+    dateElements.forEach(el => {
+      // Wenn das Element bereits formatiert wurde, überspringen
+      if (el.getAttribute('data-formatted') === 'true') return;
+      
+      const rawText = el.textContent.trim(); // z.B. "05.07.2026Vollzeit"
+      
+      // Nutzt Regex, um das Datum (DD.MM.YYYY) vom Rest zu trennen
+      const dateMatch = rawText.match(/^(\d{2}\.\d{2}\.\d{4})(.*)$/);
+      
+      if (dateMatch) {
+        const datePart = dateMatch[1];
+        const restPart = dateMatch[2].trim();
+        
+        if (restPart) {
+          el.innerHTML = `${datePart} <span style="color: #A39F99; margin: 0 6px;">I</span> ${restPart}`;
+          el.setAttribute('data-formatted', 'true');
+        }
+      }
+    });
+  };
+
+  // Regelmäßige Überprüfung, da Zoho die Elemente asynchron reinschreibt
+  const checkInterval = setInterval(formatZohoMeta, 100);
+  // Stoppt die Suche nach 8 Sekunden, um Ressourcen zu schonen
+  setTimeout(() => clearInterval(checkInterval), 8000);
 </script>
     
     <!-- ═══════════════════════════════════════════════
