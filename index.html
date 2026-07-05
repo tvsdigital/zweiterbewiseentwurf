@@ -2474,6 +2474,7 @@ footer, .footer {
     <div id="rec_job_listing_div" style="position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; overflow: hidden;"></div>
 
     <!-- Hier werden die echten Jobs vollautomatisch und elegant geladen -->
+<!-- Hier werden die echten Jobs vollautomatisch und elegant geladen -->
     <div id="custom-job-listing" class="reveal">
       <div class="job-loading">Lade aktuelle Stellenangebote...</div>
     </div>
@@ -2583,23 +2584,19 @@ footer, .footer {
   }
 </style>
 
-<!-- Dynamische Live-Schnittstelle -->
+<!-- Direkte API-Abfrage ohne schwerfälliges Widget-Skript -->
 <script type="text/javascript">
-  let jobsRendered = false;
-
-  function renderBeautifulJobs(payload) {
-    if (jobsRendered && payload && payload.length > 0) return; // Verhindert doppeltes Rendern
-    
+  function handleZohoLiveJobs(data) {
     const container = document.getElementById('custom-job-listing');
     if (!container) return;
-    
-    if (!payload || payload.length === 0) {
+
+    if (!data || !data.payload || data.payload.length === 0) {
       container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
       return;
     }
 
     let html = '';
-    payload.forEach(job => {
+    data.payload.forEach(job => {
       html += `
         <a href="${job.perma_url}" target="_blank" class="job-card">
           <div class="job-info">
@@ -2613,61 +2610,20 @@ footer, .footer {
         </a>
       `;
     });
-    
+
     container.innerHTML = html;
-    jobsRendered = true;
   }
 
-  // Lausche auf die Live-Daten von Zoho
-  window.addEventListener('message', function(event) {
-    if (event.data && typeof event.data === 'string' && event.data.includes('jobposition')) {
-      try {
-        const parsed = JSON.parse(event.data);
-        if (parsed && parsed.payload) {
-          renderBeautifulJobs(parsed.payload);
-        }
-      } catch(e) {}
-    }
-  });
-
-  // Falls das Message-Event ausbleibt, prüfen wir alle 500ms direkt das Zoho-Objekt im DOM
-  const checkZohoInterval = setInterval(function() {
-    if (typeof rec_embed_js !== 'undefined' && rec_embed_js.context && rec_embed_js.context.payload) {
-      renderBeautifulJobs(rec_embed_js.context.payload);
-      clearInterval(checkZohoInterval);
-    }
-  }, 500);
-
-  // Nach 6 Sekunden absoluter Timeout, falls Zoho offline ist oder keine Stellen existieren
-  setTimeout(function() {
-    clearInterval(checkZohoInterval);
-    const container = document.getElementById('custom-job-listing');
-    if (container && container.innerHTML.includes('Lade aktuelle')) {
-      container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
-    }
-  }, 6000);
-</script>
-
-<script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
-<script type="text/javascript">
-  if (typeof rec_embed_js !== 'undefined') {
-    const origRender = rec_embed_js.render_jobs;
-    rec_embed_js.render_jobs = function(data) {
-      if (origRender) origRender.apply(this, arguments);
-      if (data && data.payload) {
-        renderBeautifulJobs(data.payload);
-      }
+  // Abrufen der rohen Live-Daten direkt über Zohos JSONP-Schnittstelle
+  (function() {
+    const script = document.createElement('script');
+    script.src = 'https://1bewise-talents.zohorecruit.eu/recruit/v2/embed-careers-site/jobs?widget_id=rec_job_listing_div&callback=handleZohoLiveJobs';
+    script.onerror = function() {
+      const container = document.getElementById('custom-job-listing');
+      if (container) container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
     };
-
-    rec_embed_js.load({
-      widget_id: "rec_job_listing_div",
-      page_name: "Karriere",
-      source: "CareerSite",
-      site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#6875E2",
-      empty_job_msg: "No current Openings"
-    });
-  }
+    document.body.appendChild(script);
+  })();
 </script>
     
     <!-- ═══════════════════════════════════════════════
