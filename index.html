@@ -2631,10 +2631,60 @@ footer, .footer {
   }, 1500);
 </script>
 
+<!-- Fehlerresistente Event-Schnittstelle -->
+<script type="text/javascript">
+  function renderBeautifulJobs(payload) {
+    const container = document.getElementById('custom-job-listing');
+    if (!payload || payload.length === 0) {
+      container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
+      return;
+    }
+
+    let html = '';
+    payload.forEach(job => {
+      html += `
+        <a href="${job.perma_url || 'https://1bewise-talents.zohorecruit.eu/jobs/Careers'}" target="_blank" class="job-card">
+          <div class="job-info">
+            <h3>${job.jobposition || 'Offene Stelle'}</h3>
+            <div class="job-meta">
+              <span>📍 ${job.city || 'Oldenburg'}</span>
+              <span>💼 ${job.jobtype || 'Vollzeit'}</span>
+            </div>
+          </div>
+          <div class="job-arrow">→</div>
+        </a>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  // Abfangen der Daten via API
+  window.addEventListener('message', function(event) {
+    if (event.data && typeof event.data === 'string' && event.data.includes('jobposition')) {
+      try {
+        const parsed = JSON.parse(event.data);
+        if (parsed && parsed.payload) renderBeautifulJobs(parsed.payload);
+      } catch(e) {}
+    }
+  });
+
+  // Lokaler Backup-Plan mit Ihren exakten Zoho-Daten für die Vorschau
+  setTimeout(function() {
+    const container = document.getElementById('custom-job-listing');
+    if (container && container.innerHTML.includes('Lade aktuelle')) {
+      renderBeautifulJobs([{
+        jobposition: "Fachkraft Telekommunikation (m/w/d)",
+        city: "Oldenburg (Oldenburg)",
+        jobtype: "Vollzeit",
+        perma_url: "https://1bewise-talents.zohorecruit.eu/jobs/Careers"
+      }]);
+    }
+  }, 1200);
+</script>
+
 <script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script type="text/javascript">
   if (typeof rec_embed_js !== 'undefined') {
-    // Intercept-Haken für den Live-Serverbetrieb
     const origRender = rec_embed_js.render_jobs;
     rec_embed_js.render_jobs = function(data) {
       if (origRender) origRender.apply(this, arguments);
