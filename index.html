@@ -2470,8 +2470,10 @@ footer, .footer {
       <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Anfragen <span class="arrow" aria-hidden="true">→</span></a>
     </div>
 
-    <div class="zoho-custom-wrapper reveal">
-      <div id="rec_job_listing_div"></div>
+    <div id="rec_job_listing_div" style="display: none !important;"></div>
+
+    <div id="custom-job-listing" class="reveal">
+      <div class="job-loading">Lade aktuelle Stellenangebote...</div>
     </div>
 
     <div class="initiativ-cta reveal">
@@ -2490,49 +2492,163 @@ footer, .footer {
 </section>
 
 <style>
-  .zoho-custom-wrapper {
-    width: 100%;
+  #custom-job-listing {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     margin-bottom: 40px;
+    width: 100%;
   }
 
-  /* --- Zoho Standard-Header und Suchleiste ausblenden --- */
-  .embed_jobs_head, 
-  .embed_jobs_head2, 
-  .embed_jobs_head3,
-  .rec-job-search,
-  .rec-search-container,
-  #rec_job_listing_div header {
-    background: transparent !important;
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
+  .job-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
   }
 
-  /* --- Unerwünschte Metadaten im Listenelement ausblenden --- */
-  /* Blendet die Labels "Stellentyp" und das doppelte "Vollzeit" in den Standard-Klassen aus */
-  .rec-job-type,
-  .rec-job-meta-type,
-  [data-meta="jobtype"],
-  .rec-job-type-label {
-    display: none !important;
+  .job-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(201, 185, 154, 0.15);
+    border-color: rgba(201, 185, 154, 0.3);
   }
 
-  /* --- Korrektur für Datum und Trennzeichen "I" --- */
-  /* Zoho klatscht Datum und Typ oft direkt aneinander. Wir erzwingen ein sauberes "I" */
-  .rec-job-date::after {
-    content: " I " !important;
-    margin: 0 6px !important;
-    color: #666666 !important;
-    display: inline-block !important;
+  .job-info h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111111;
+    margin: 0 0 8px 0;
   }
 
-  /* --- Begrenzung auf die neuesten 5 Stellen via CSS (Sicherheitsanker) --- */
-  #rec_job_listing_div .rec-job-item:nth-child(n+6),
-  #rec_job_listing_div .cw-job-card:nth-child(n+6),
-  #rec_job_listing_div li:nth-child(n+6) {
-    display: none !important;
+  .job-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.9rem;
+    color: #666666;
+  }
+
+  .job-arrow {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f5f5f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #C9B99A;
+    font-weight: bold;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  .job-card:hover .job-arrow {
+    background: #C9B99A;
+    color: #ffffff;
+  }
+
+  .job-loading, .job-empty {
+    text-align: center;
+    padding: 40px;
+    color: #7A7670;
+    background: #ffffff;
+    border-radius: 16px;
+    font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    .job-card {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 20px;
+    }
+    .job-arrow {
+      align-self: flex-end;
+    }
   }
 </style>
+
+<script type="text/javascript">
+  function buildBeautifulJobs(payload) {
+    const container = document.getElementById('custom-job-listing');
+    if (!container) return;
+
+    if (!payload || payload.length === 0) {
+      container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
+      return;
+    }
+
+    // Sortieren nach Datum absteigend und auf maximal 5 Einträge begrenzen
+    const sortedJobs = payload
+      .sort((a, b) => new Date(b.date_posted) - new Date(a.date_posted))
+      .slice(0, 5);
+
+    let html = '';
+    sortedJobs.forEach(job => {
+      // 1. Unschöne Begriffe "Stellentyp" oder gedoppeltes "Vollzeit" fliegen raus
+      const title = job.jobposition || 'Offene Stelle';
+      const city = job.city || 'Oldenburg';
+      const type = job.jobtype || 'Vollzeit';
+      
+      // 2. Datum formatieren (Z.B. aus ISO-String ein sauberes DD.MM.YYYY machen)
+      let displayDate = "";
+      if (job.date_posted) {
+        const dateObj = new Date(job.date_posted);
+        if (!isNaN(dateObj)) {
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const year = dateObj.getFullYear();
+          displayDate = `${day}.${month}.${year}`;
+        }
+      }
+      
+      // 3. Wenn Datum vorhanden, erzwingen wir exakt das gewünschte Trennzeichen " I "
+      const metaText = displayDate ? `${displayDate} I ${type}` : type;
+
+      html += `
+        <a href="${job.perma_url}" target="_blank" class="job-card">
+          <div class="job-info">
+            <h3>${title}</h3>
+            <div class="job-meta">
+              <span>📍 ${city}</span>
+              <span>💼 ${metaText}</span>
+            </div>
+          </div>
+          <div class="job-arrow">→</div>
+        </a>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  // Intercepting-Haken direkt in Zohos Engine verankern
+  window.addEventListener('message', function(event) {
+    if (event.data && typeof event.data === 'string' && event.data.includes('jobposition')) {
+      try {
+        const parsed = JSON.parse(event.data);
+        if (parsed && parsed.payload) buildBeautifulJobs(parsed.payload);
+      } catch(e) {}
+    }
+  });
+
+  // Permanenter Taktgeber-Überwacher für das geladene Widget-Objekt im DOM
+  const monitorZohoData = setInterval(function() {
+    if (typeof rec_embed_js !== 'undefined' && rec_embed_js.context && rec_embed_js.context.payload) {
+      buildBeautifulJobs(rec_embed_js.context.payload);
+      clearInterval(monitorZohoData);
+    }
+  }, 300);
+
+  // Timeout nach 7 Sekunden
+  setTimeout(() => clearInterval(monitorZohoData), 7000);
+</script>
 
 <script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script type="text/javascript">
@@ -2542,12 +2658,8 @@ footer, .footer {
       page_name: "Karriere",
       source: "CareerSite",
       site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#C9B99A", 
-      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
-      // Begrenzt die Abfrage serverseitig direkt auf die 5 neuesten Einträge
-      per_page: 5, 
-      sort_by: "date_posted",
-      sort_order: "desc"
+      brand_color: "#C9B99A",
+      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen."
     });
   }
 </script>
