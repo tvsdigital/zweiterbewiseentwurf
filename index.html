@@ -2460,9 +2460,7 @@ footer, .footer {
 <!-- ═══════════════════════════════════════════════
      STELLENANGEBOTE (Clean & Custom Styled - Fixed)
 ════════════════════════════════════════════════ -->
-<!-- ═══════════════════════════════════════════════
-     SECTION: STELLENANGEBOTE (Optimiertes Zoho Widget)
-════════════════════════════════════════════════ -->
+
 <section id="stellenangebote" aria-labelledby="jobs-headline">
   <div class="jobs-inner">
     <div class="jobs-header reveal">
@@ -2473,10 +2471,12 @@ footer, .footer {
       <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Anfragen <span class="arrow" aria-hidden="true">→</span></a>
     </div>
 
-    <div class="zoho-custom-wrapper reveal">
-      <div id="rec_job_listing_div"></div>
+    <!-- Hier landen die sauberen Custom-Karten – der Zoho-iFrame wird komplett ignoriert -->
+    <div id="custom-job-listing" class="reveal">
+      <div class="job-loading">Lade aktuelle Stellenangebote...</div>
     </div>
 
+    <!-- Aligned Initiativ CTA inside .jobs-inner wrapper -->
     <div class="initiativ-cta reveal">
       <div>
         <h3>Keine passende Position dabei? <br>
@@ -2492,109 +2492,142 @@ footer, .footer {
   </div>
 </section>
 
+<!-- CSS: Styling für deine individuellen Wunsch-Karten -->
 <style>
-  /* Verhindert unschöne Layout-Sprünge beim Laden */
-  .zoho-custom-wrapper {
-    width: 100%;
+  #custom-job-listing {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     margin-bottom: 40px;
+    width: 100%;
   }
 
-  /* 1. ZOHO HEADER, FILTER & FILTER-TEXTE KOMPLETT AUSBLENDEN */
-  .zoho-custom-wrapper iframe, 
-  #rec_job_listing_div iframe,
-  .embed_jobs_head,
-  .rec-job-search,
-  .rec-search-container,
-  .rec-job-type-label,
-  [data-meta="jobtype"] {
-    display: none !important;
+  .job-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px 32px;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
   }
 
-  #rec_job_listing_div {
-    width: 100% !important;
-    min-height: auto !important;
+  .job-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(201, 185, 154, 0.15);
+    border-color: rgba(201, 185, 154, 0.3);
   }
 
-  /* 2. KARTEN-STYLING */
-  .rec-job-title, .cw-job-title {
-    font-size: 1.25rem !important;
-    font-weight: 600 !important;
-    color: #111111 !important;
-  }
-  
-  .rec-job-list, .cw-job-card {
-    background: #ffffff !important;
-    border-radius: 16px !important;
-    padding: 24px 32px !important;
-    margin-bottom: 16px !important;
-    border: 1px solid rgba(0, 0, 0, 0.05) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+  .job-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111111;
+    margin: 0 0 4px 0;
   }
 
-  .rec-job-list:hover, .cw-job-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 12px 24px rgba(201, 185, 154, 0.15) !important;
-    border-color: rgba(201, 185, 154, 0.3) !important;
+  .job-location {
+    font-size: 0.95rem;
+    color: #555555;
+    margin-bottom: 12px;
   }
 
-  /* 3. NUR DIE 5 NEUESTEN STELLEN ANZEIGEN */
-  /* Blendete alle Jobelemente ab dem 6. Element rigoros aus */
-  .rec-job-list:nth-child(n+6), 
-  .cw-job-card:nth-child(n+6),
-  #rec_job_listing_div li:nth-child(n+6) {
-    display: none !important;
+  .job-desc {
+    font-size: 0.95rem;
+    color: #333333;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .job-meta-footer {
+    font-size: 0.9rem;
+    color: #666666;
+  }
+
+  .job-loading, .job-empty {
+    text-align: center;
+    padding: 40px;
+    color: #7A7670;
+    background: #ffffff;
+    border-radius: 16px;
+    font-style: italic;
   }
 </style>
 
-<script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script type="text/javascript">
-  if (typeof rec_embed_js !== 'undefined') {
-    rec_embed_js.load({
-      widget_id: "rec_job_listing_div",
-      page_name: "Karriere",
-      source: "CareerSite",
-      site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#C9B99A",
-      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
-      // native Zoho-Filterung aktivieren
-      per_page: 5,
-      sort_by: "date_posted",
-      sort_order: "desc"
-    });
-  }
+  // Callback-Funktion verarbeitet die rohen Daten von Zoho
+  function rec_jsonp_callback(data) {
+    const container = document.getElementById('custom-job-listing');
+    if (!container) return;
 
-  // 4. DATUM & VOLLZEIT MIT " I " TRENNEN
-  // Da Zoho das Datum und den Typ als rohen Text zusammenklatscht, trennen wir es per JavaScript sauber auf
-  const formatZohoMeta = () => {
-    // Suche nach typischen Datums-Containern von Zoho
-    const dateElements = document.querySelectorAll('.rec-job-date, .cw-job-date');
-    
-    dateElements.forEach(el => {
-      // Wenn das Element bereits formatiert wurde, überspringen
-      if (el.getAttribute('data-formatted') === 'true') return;
+    if (!data || !data.jobs || data.jobs.length === 0) {
+      container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
+      return;
+    }
+
+    // 1. Sortieren nach Veröffentlichungsdatum (Neueste zuerst) & Limit auf max 5
+    const latestJobs = data.jobs
+      .sort((a, b) => new Date(b.date_posted) - new Date(a.date_posted))
+      .slice(0, 5);
+
+    let html = '';
+    latestJobs.forEach(job => {
+      const title = job.title || 'Offene Position';
+      const url = job.url || 'https://1bewise-talents.zohorecruit.eu/jobs/Careers';
       
-      const rawText = el.textContent.trim(); // z.B. "05.07.2026Vollzeit"
-      
-      // Nutzt Regex, um das Datum (DD.MM.YYYY) vom Rest zu trennen
-      const dateMatch = rawText.match(/^(\d{2}\.\d{2}\.\d{4})(.*)$/);
-      
-      if (dateMatch) {
-        const datePart = dateMatch[1];
-        const restPart = dateMatch[2].trim();
-        
-        if (restPart) {
-          el.innerHTML = `${datePart} <span style="color: #A39F99; margin: 0 6px;">I</span> ${restPart}`;
-          el.setAttribute('data-formatted', 'true');
+      // Standort aufbereiten
+      let location = job.city || '';
+      if (job.province) location += (location ? ', ' : '') + job.province;
+      if (job.country) location += (location ? ', ' : '') + job.country;
+      if (!location) location = "Oldenburg";
+
+      // Stellentyp ermitteln
+      const type = job.type || 'Vollzeit';
+
+      // Teaser-Beschreibung säubern
+      let desc = job.summary || '';
+      if (desc.length > 180) desc = desc.substring(0, 180) + '...';
+
+      // 2. Datum formatieren (DD.MM.YYYY)
+      let displayDate = "05.07.2026"; // Fallback auf das aktuelle Datum
+      if (job.date_posted) {
+        const d = new Date(job.date_posted);
+        if (!isNaN(d.getTime())) {
+          const day = String(d.getDate()).padStart(2, '0');
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const year = d.getFullYear();
+          displayDate = `${day}.${month}.${year}`;
         }
       }
-    });
-  };
 
-  // Regelmäßige Überprüfung, da Zoho die Elemente asynchron reinschreibt
-  const checkInterval = setInterval(formatZohoMeta, 100);
-  // Stoppt die Suche nach 8 Sekunden, um Ressourcen zu schonen
-  setTimeout(() => clearInterval(checkInterval), 8000);
+      // 3. HTML-Karte generieren (Mit perfektem " I " Trenner im Fußbereich)
+      html += `
+        <a href="${url}" target="_blank" class="job-card">
+          <h3>${title}</h3>
+          <div class="job-location">${location}</div>
+          ${desc ? `<div class="job-desc">${desc}</div>` : ''}
+          <div class="job-meta-footer">
+            <span>${displayDate} I ${type}</span>
+          </div>
+        </a>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  // API-Request starten
+  (function() {
+    const script = document.createElement('script');
+    // Holt die ungefilterten Daten direkt via JSONP ab
+    script.src = 'https://1bewise-talents.zohorecruit.eu/recruit/v2/embed-careers-site/jobs?per_page=20&callback=rec_jsonp_callback';
+    script.onerror = function() {
+      const container = document.getElementById('custom-job-listing');
+      if (container) container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
+    };
+    document.body.appendChild(script);
+  })();
 </script>
     
     <!-- ═══════════════════════════════════════════════
