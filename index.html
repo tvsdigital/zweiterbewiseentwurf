@@ -2470,8 +2470,8 @@ footer, .footer {
       <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Anfragen <span class="arrow" aria-hidden="true">→</span></a>
     </div>
 
-    <div id="custom-job-listing" class="reveal">
-      <div class="job-loading">Lade aktuelle Stellenangebote...</div>
+    <div class="zoho-custom-wrapper reveal">
+      <div id="rec_job_listing_div"></div>
     </div>
 
     <div class="initiativ-cta reveal">
@@ -2490,142 +2490,63 @@ footer, .footer {
 </section>
 
 <style>
-  #custom-job-listing {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 40px;
+  /* Verhindert unschöne Layout-Sprünge beim Laden */
+  .zoho-custom-wrapper {
     width: 100%;
+    margin-bottom: 40px;
   }
 
-  .job-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 24px 32px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-decoration: none;
-    color: inherit;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  /* 1. ZOHO HEADER & FILTER KOMPLETT AUSBLENDEN */
+  .zoho-custom-wrapper iframe, 
+  #rec_job_listing_div iframe {
+    width: 100% !important;
+    border: none !important;
   }
 
-  .job-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(201, 185, 154, 0.15);
-    border-color: rgba(201, 185, 154, 0.3);
+  /* 2. ERZWUNGENES STYLING FÜR DIE ZOHO INTERNEN ELEMENTE (CSS-Injection-Simulation) */
+  /* Zoho baut ein iFrame, dessen Styles wir über die offizielle Markenfarbe im JS steuern. */
+  /* Um sicherzustellen, dass das Layout sauber sitzt, geben wir dem Container Luft: */
+  #rec_job_listing_div {
+    width: 100% !important;
+    min-height: auto !important;
   }
 
-  .job-info h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #111111;
-    margin: 0 0 8px 0;
+  /* Falls Zoho Elemente direkt im DOM platziert (je nach Widget-Version): */
+  .rec-job-title, .cw-job-title {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    color: #111111 !important;
+  }
+  
+  .rec-job-list, .cw-job-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 24px 32px !important;
+    margin-bottom: 16px !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
   }
 
-  .job-meta {
-    display: flex;
-    gap: 16px;
-    font-size: 0.9rem;
-    color: #666666;
-  }
-
-  .job-meta span {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .job-arrow {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #f5f5f7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #C9B99A;
-    font-weight: bold;
-    transition: background 0.3s ease, color 0.3s ease;
-  }
-
-  .job-card:hover .job-arrow {
-    background: #C9B99A;
-    color: #ffffff;
-  }
-
-  .job-loading, .job-empty {
-    text-align: center;
-    padding: 40px;
-    color: #7A7670;
-    background: #ffffff;
-    border-radius: 16px;
-    font-style: italic;
-  }
-
-  @media (max-width: 768px) {
-    .job-card {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 20px;
-    }
-    .job-arrow {
-      align-self: flex-end;
-    }
+  .rec-job-list:hover, .cw-job-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 24px rgba(201, 185, 154, 0.15) !important;
+    border-color: rgba(201, 185, 154, 0.3) !important;
   }
 </style>
 
+<script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script type="text/javascript">
-  // Callback-Funktion, die von Zohos Servern getriggert wird
-  function rec_jsonp_callback(data) {
-    const container = document.getElementById('custom-job-listing');
-    if (!container) return;
-
-    // Falls keine Jobs aktiv sind oder die API leer antwortet
-    if (!data || !data.jobs || data.jobs.length === 0) {
-      container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
-      return;
-    }
-
-    let html = '';
-    data.jobs.forEach(job => {
-      // Holt sich den sauberen Link zur Bewerbungsseite
-      const jobUrl = job.url || 'https://1bewise-talents.zohorecruit.eu/jobs/Careers';
-      const title = job.title || 'Offene Position';
-      const location = job.city || 'Oldenburg';
-      const type = job.type || 'Vollzeit';
-
-      html += `
-        <a href="${jobUrl}" target="_blank" class="job-card">
-          <div class="job-info">
-            <h3>${title}</h3>
-            <div class="job-meta">
-              <span>📍 ${location}</span>
-              <span>💼 ${type}</span>
-            </div>
-          </div>
-          <div class="job-arrow">→</div>
-        </a>
-      `;
+  if (typeof rec_embed_js !== 'undefined') {
+    rec_embed_js.load({
+      widget_id: "rec_job_listing_div",
+      page_name: "Karriere",
+      source: "CareerSite",
+      site: "https://1bewise-talents.zohorecruit.eu",
+      brand_color: "#C9B99A", // Nutzt direkt deine edle Gold/Beige-Markenfarbe für Buttons/Links in Zoho!
+      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen."
     });
-
-    container.innerHTML = html;
   }
-
-  // Abruf über den plattformoffenen JSONP-Feed von Zoho Recruit
-  (function() {
-    const script = document.createElement('script');
-    // Nutzt den universellen Datenfeed deiner Zoho-Karriereseite
-    script.src = 'https://1bewise-talents.zohorecruit.eu/recruit/v2/embed-careers-site/jobs?per_page=100&callback=rec_jsonp_callback';
-    script.onerror = function() {
-      const container = document.getElementById('custom-job-listing');
-      if (container) container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
-    };
-    document.body.appendChild(script);
-  })();
 </script>
     
     <!-- ═══════════════════════════════════════════════
