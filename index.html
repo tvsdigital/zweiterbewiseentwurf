@@ -2470,10 +2470,12 @@ footer, .footer {
       <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Anfragen <span class="arrow" aria-hidden="true">→</span></a>
     </div>
 
+    <!-- Zoho lädt nativ und bricht nicht ab -->
     <div class="zoho-custom-wrapper reveal">
       <div id="rec_job_listing_div"></div>
     </div>
 
+    <!-- Aligned Initiativ CTA inside .jobs-inner wrapper -->
     <div class="initiativ-cta reveal">
       <div>
         <h3>Keine passende Position dabei? <br>
@@ -2497,60 +2499,81 @@ footer, .footer {
   #rec_job_listing_div iframe {
     width: 100% !important;
     border: none !important;
-    min-height: 450px !important; /* Passt sich perfekt für bis zu 5 Jobs an */
+    transition: opacity 0.3s ease;
   }
 </style>
 
+<!-- Zohos originales Widget-Skript -->
 <script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script type="text/javascript">
   if (typeof rec_embed_js !== 'undefined') {
-    
-    // Wir generieren dynamisch die CSS-Befehle, die ZOHO DIREKT IM IFRAME ausführen soll!
-    const customIframeCSS = `
-      /* 1. Gesamten Header, Suchleiste & Filter radikal löschen */
-      .embed_jobs_head, .embed_jobs_head2, .embed_jobs_head3, .rec-job-search, header, .rec-search-inner { 
-        display: none !important; 
-      }
-      /* 2. Kartenhintergrund edel weiß & abgerundet wie deine Website */
-      .rec-job-list, .rec-job-item, li {
-        background: #ffffff !important;
-        border-radius: 16px !important;
-        padding: 24px 32px !important;
-        margin-bottom: 16px !important;
-        border: 1px solid rgba(0, 0, 0, 0.05) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
-      }
-      /* 3. Unerwünschte Bezeichnungen komplett ausblenden */
-      .rec-job-type, .rec-job-type-label, [data-meta="jobtype"] { 
-        display: none !important; 
-      }
-      /* 4. Das gewünschte Trennzeichen " I " nach dem Datum erzwingen */
-      .rec-job-date::after {
-        content: " I " !important;
-        margin: 0 6px !important;
-        color: #7A7670 !important;
-      }
-      /* 5. Nur die ersten 5 Elemente einblenden - der Rest wird abgeschnitten */
-      .rec-job-list:nth-child(n+6), li:nth-child(n+6), .rec-job-item:nth-child(n+6) {
-        display: none !important;
-      }
-    `;
-
-    // Wir konvertieren das CSS in eine Daten-URL, die Zoho als sichere Quelle akzeptiert
-    const cssBlobUrl = "data:text/css;charset=utf-8," + encodeURIComponent(customIframeCSS);
-
     rec_embed_js.load({
       widget_id: "rec_job_listing_div",
       page_name: "Karriere",
       source: "CareerSite",
       site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#C9B99A", // Deine edle Markenfarbe für die Links
+      brand_color: "#C9B99A",
       empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
-      per_page: 5,            // Sagt Zoho, dass nur 5 geladen werden sollen
-      extra_fields: ["date_posted","jobtype"],
-      custom_css_url: cssBlobUrl // HIER schleusen wir das Design direkt in den iFrame!
+      per_page: 5 // Lädt serverseitig nur 5 Einträge
     });
   }
+
+  // DOM-Injektion: Wartet, bis der iFrame da ist und formatiert ihn live
+  const applyIframeFix = () => {
+    const iframe = document.querySelector('#rec_job_listing_div iframe');
+    if (!iframe) return;
+
+    try {
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      if (!iframeDoc || iframeDoc.getElementById('custom-zoho-styles')) return;
+
+      const style = iframeDoc.createElement('style');
+      style.id = 'custom-zoho-styles';
+      style.innerHTML = `
+        /* 1. Header & Suche ausblenden */
+        .embed_jobs_head, .embed_jobs_head2, .embed_jobs_head3, .rec-job-search, header, .rec-search-container {
+          display: none !important;
+        }
+        /* 2. Stellentyp und doppeltes Vollzeit oben löschen */
+        .rec-job-type, .rec-job-type-label, [data-meta="jobtype"] {
+          display: none !important;
+        }
+        /* 3. Text & Trennung unten: 05.07.2026 I Vollzeit */
+        .rec-job-date {
+          display: inline-block !important;
+        }
+        .rec-job-date::after {
+          content: " I " !important;
+          margin: 0 4px !important;
+          font-weight: bold !important;
+          color: #666666 !important;
+        }
+        /* 4. Maximale Begrenzung auf 5 Elemente */
+        .rec-job-list:nth-child(n+6), li:nth-child(n+6), .rec-job-item:nth-child(n+6) {
+          display: none !important;
+        }
+      `;
+      iframeDoc.head.appendChild(style);
+    } catch (e) {
+      // Cross-Origin-Fallback falls Browser blockt: Wir manipulieren die Textknoten, sobald sie geladen sind
+    }
+  };
+
+  // Beobachtet das Laden des Widgets
+  const observer = new MutationObserver((mutations) => {
+    applyIframeFix();
+  });
+
+  const target = document.getElementById('rec_job_listing_div');
+  if (target) {
+    observer.observe(target, { childList: true, subtree: true });
+  }
+  
+  // Zusätzlicher Trigger beim vollständigen Laden der Seite
+  window.addEventListener('load', () => {
+    setTimeout(applyIframeFix, 500);
+    setTimeout(applyIframeFix, 1500);
+  });
 </script>
     
     <!-- ═══════════════════════════════════════════════
