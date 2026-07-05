@@ -2470,12 +2470,15 @@ footer, .footer {
       <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Anfragen <span class="arrow" aria-hidden="true">→</span></a>
     </div>
 
-    <div id="rec_job_listing_div" style="display: none !important;"></div>
+<!-- Versteckt, aber für Zoho voll funktionsfähig gerendert -->
+    <div id="rec_job_listing_div" style="position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; overflow: hidden;"></div>
 
+    <!-- Hier werden die echten Jobs vollautomatisch und elegant geladen -->
     <div id="custom-job-listing" class="reveal">
       <div class="job-loading">Lade aktuelle Stellenangebote...</div>
     </div>
 
+    <!-- Aligned Initiativ CTA inside .jobs-inner wrapper -->
     <div class="initiativ-cta reveal">
       <div>
         <h3>Keine passende Position dabei? <br>
@@ -2580,18 +2583,21 @@ footer, .footer {
   }
 </style>
 
-<!-- Dynamische Zoho-Schnittstelle (Ohne statische Backups) -->
+<!-- Dynamische Live-Schnittstelle -->
 <script type="text/javascript">
+  let jobsRendered = false;
+
   function renderBeautifulJobs(payload) {
-    const container = document.getElementById('custom-job-listing');
+    if (jobsRendered && payload && payload.length > 0) return; // Verhindert doppeltes Rendern
     
-    // Falls wirklich gar keine Jobs aktiv sind
+    const container = document.getElementById('custom-job-listing');
+    if (!container) return;
+    
     if (!payload || payload.length === 0) {
       container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
       return;
     }
 
-    // Schleife läuft über ALLE von Zoho gelieferten Jobs
     let html = '';
     payload.forEach(job => {
       html += `
@@ -2607,10 +2613,12 @@ footer, .footer {
         </a>
       `;
     });
+    
     container.innerHTML = html;
+    jobsRendered = true;
   }
 
-  // Zoho schickt die Daten oft über ein window-Message-Event (wichtig für GitHub/Live-Server)
+  // Lausche auf die Live-Daten von Zoho
   window.addEventListener('message', function(event) {
     if (event.data && typeof event.data === 'string' && event.data.includes('jobposition')) {
       try {
@@ -2618,18 +2626,31 @@ footer, .footer {
         if (parsed && parsed.payload) {
           renderBeautifulJobs(parsed.payload);
         }
-      } catch(e) {
-        console.error("Fehler beim Verarbeiten der Zoho-Daten:", e);
-      }
+      } catch(e) {}
     }
   });
+
+  // Falls das Message-Event ausbleibt, prüfen wir alle 500ms direkt das Zoho-Objekt im DOM
+  const checkZohoInterval = setInterval(function() {
+    if (typeof rec_embed_js !== 'undefined' && rec_embed_js.context && rec_embed_js.context.payload) {
+      renderBeautifulJobs(rec_embed_js.context.payload);
+      clearInterval(checkZohoInterval);
+    }
+  }, 500);
+
+  // Nach 6 Sekunden absoluter Timeout, falls Zoho offline ist oder keine Stellen existieren
+  setTimeout(function() {
+    clearInterval(checkZohoInterval);
+    const container = document.getElementById('custom-job-listing');
+    if (container && container.innerHTML.includes('Lade aktuelle')) {
+      container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
+    }
+  }, 6000);
 </script>
 
-<!-- Laden des originalen Zoho-Skripts -->
 <script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script type="text/javascript">
   if (typeof rec_embed_js !== 'undefined') {
-    // Intercept-Haken für die direkte Übernahme der Live-Daten
     const origRender = rec_embed_js.render_jobs;
     rec_embed_js.render_jobs = function(data) {
       if (origRender) origRender.apply(this, arguments);
@@ -2638,7 +2659,6 @@ footer, .footer {
       }
     };
 
-    // Initialisierung mit deiner offiziellen Widget-ID
     rec_embed_js.load({
       widget_id: "rec_job_listing_div",
       page_name: "Karriere",
