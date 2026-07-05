@@ -2470,15 +2470,10 @@ footer, .footer {
       <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Anfragen <span class="arrow" aria-hidden="true">→</span></a>
     </div>
 
-    <!-- Zoho muss physisch im DOM existieren, wir machen es aber unsichtbar klein -->
-    <div id="rec_job_listing_div" style="position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; overflow: hidden;"></div>
-
-    <!-- Hier werden die extrahierten Jobs vollautomatisch und bildschön gerendert -->
     <div id="custom-job-listing" class="reveal">
       <div class="job-loading">Lade aktuelle Stellenangebote...</div>
     </div>
 
-    <!-- Aligned Initiativ CTA inside .jobs-inner wrapper -->
     <div class="initiativ-cta reveal">
       <div>
         <h3>Keine passende Position dabei? <br>
@@ -2584,99 +2579,53 @@ footer, .footer {
 </style>
 
 <script type="text/javascript">
-  // Diese Funktion liest die Elemente aus, die Zoho heimlich generiert
-  function extractAndRenderJobs() {
-    const zohoContainer = document.getElementById('rec_job_listing_div');
-    const customContainer = document.getElementById('custom-job-listing');
-    if (!zohoContainer || !customContainer) return false;
+  // Callback-Funktion, die von Zohos Servern getriggert wird
+  function rec_jsonp_callback(data) {
+    const container = document.getElementById('custom-job-listing');
+    if (!container) return;
 
-    // Suche nach den Links/Stellen im Zoho-Widget (Zoho nutzt meist .rec-job-title oder a-Tags)
-    const zohoLinks = zohoContainer.querySelectorAll('a');
-    
-    // Fallback-Prüfung, falls Zoho noch lädt oder eine leere Nachricht anzeigt
-    if (zohoContainer.innerText.includes('No current Openings') || zohoContainer.innerText.includes('keine offenen Vakanzen')) {
-      customContainer.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
-      return true;
+    // Falls keine Jobs aktiv sind oder die API leer antwortet
+    if (!data || !data.jobs || data.jobs.length === 0) {
+      container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
+      return;
     }
 
-    if (zohoLinks.length === 0) return false;
-
     let html = '';
-    let foundJobs = 0;
+    data.jobs.forEach(job => {
+      // Holt sich den sauberen Link zur Bewerbungsseite
+      const jobUrl = job.url || 'https://1bewise-talents.zohorecruit.eu/jobs/Careers';
+      const title = job.title || 'Offene Position';
+      const location = job.city || 'Oldenburg';
+      const type = job.type || 'Vollzeit';
 
-    zohoLinks.forEach(link => {
-      // Wir filtern ungewollte System-Links wie "Zurück" oder "Suchen" heraus
-      const title = link.innerText.trim();
-      if (!title || title.length < 3 || title.toLowerCase() === 'suche' || title.toLowerCase() === 'search') return;
-
-      const url = link.href;
-      
-      // Versuche, den Ort und Typ aus dem benachbarten Text zu lesen (oder Standardwerte)
-      let parentText = link.parentElement ? link.parentElement.innerText : '';
-      let city = 'Oldenburg';
-      if (parentText.includes('Niedersachsen') || parentText.includes('Deutschland')) {
-        city = 'Oldenburg (Oldenburg)';
-      }
-      
       html += `
-        <a href="${url}" target="_blank" class="job-card">
+        <a href="${jobUrl}" target="_blank" class="job-card">
           <div class="job-info">
             <h3>${title}</h3>
             <div class="job-meta">
-              <span>📍 ${city}</span>
-              <span>💼 Vollzeit</span>
+              <span>📍 ${location}</span>
+              <span>💼 ${type}</span>
             </div>
           </div>
           <div class="job-arrow">→</div>
         </a>
       `;
-      foundJobs++;
     });
 
-    if (foundJobs > 0) {
-      customContainer.innerHTML = html;
-      return true;
-    }
-    return false;
+    container.innerHTML = html;
   }
 
-  // Ein Observer überwacht das Zoho-Feld und schlägt Alarm, sobald Zoho dort etwas hineinschreibt
-  const observer = new MutationObserver(function(mutations) {
-    if (extractAndRenderJobs()) {
-      observer.disconnect(); // Stoppen, sobald Jobs erfolgreich kopiert wurden
-    }
-  });
-
-  const target = document.getElementById('rec_job_listing_div');
-  if (target) {
-    observer.observe(target, { childList: true, subtree: true });
-  }
-
-  // Letzter Sicherheits-Fallback nach 5 Sekunden
-  setTimeout(function() {
-    observer.disconnect();
-    if (!extractAndRenderJobs()) {
+  // Abruf über den plattformoffenen JSONP-Feed von Zoho Recruit
+  (function() {
+    const script = document.createElement('script');
+    // Nutzt den universellen Datenfeed deiner Zoho-Karriereseite
+    script.src = 'https://1bewise-talents.zohorecruit.eu/recruit/v2/embed-careers-site/jobs?per_page=100&callback=rec_jsonp_callback';
+    script.onerror = function() {
       const container = document.getElementById('custom-job-listing');
-      if (container && container.innerHTML.includes('Lade aktuelle')) {
-        container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
-      }
-    }
-  }, 5000);
-</script>
-
-<!-- Hier laden wir das originale Skript, das die Rechte besitzt, die Daten anzuzeigen -->
-<script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
-<script type="text/javascript">
-  if (typeof rec_embed_js !== 'undefined') {
-    rec_embed_js.load({
-      widget_id: "rec_job_listing_div",
-      page_name: "Karriere",
-      source: "CareerSite",
-      site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#6875E2",
-      empty_job_msg: "No current Openings"
-    });
-  }
+      if (container) container.innerHTML = '<div class="job-empty">Zurzeit haben wir keine offenen Vakanzen.</div>';
+    };
+    document.body.appendChild(script);
+  })();
 </script>
     
     <!-- ═══════════════════════════════════════════════
