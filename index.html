@@ -2504,29 +2504,7 @@ footer, .footer {
   #rec_job_listing_div iframe {
     width: 100% !important;
     border: none !important;
-  }
-
-  /* Dein funktionierendes Karten-Styling für die Hauptseite */
-  .rec-job-title, .cw-job-title {
-    font-size: 1.25rem !important;
-    font-weight: 600 !important;
-    color: #111111 !important;
-  }
-  
-  .rec-job-list, .cw-job-card {
-    background: #ffffff !important;
-    border-radius: 16px !important;
-    padding: 24px 32px !important;
-    margin-bottom: 16px !important;
-    border: 1px solid rgba(0, 0, 0, 0.05) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02) !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-  }
-
-  .rec-job-list:hover, .cw-job-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 12px 24px rgba(201, 185, 154, 0.15) !important;
-    border-color: rgba(201, 185, 154, 0.3) !important;
+    min-height: 520px !important; 
   }
 </style>
 
@@ -2538,83 +2516,19 @@ footer, .footer {
       page_name: "Karriere",
       source: "CareerSite",
       site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#C9B99A",
-      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen."
-    });
-  }
-
-  // --- DIE IFRAME-INJEKTIONS-ENGINE ---
-  // Diese Funktion tunnelt unsere Styling-Wünsche direkt in Zohos geschützten iFrame
-  function injectStylesIntoZoho() {
-    const iframe = document.querySelector('#rec_job_listing_div iframe');
-    if (!iframe) return;
-
-    try {
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      if (!iframeDoc) return;
-
-      // Falls die Styles schon injiziert wurden, nichts tun
-      if (iframeDoc.getElementById('bewise-custom-iframe-css')) {
-        // Text-Korrektur laufend ausführen falls Zoho neu rendert
-        modifyIframeText(iframeDoc);
-        return;
-      }
-
-      const styleEl = iframeDoc.createElement('style');
-      styleEl.id = 'bewise-custom-iframe-css';
-      styleEl.innerHTML = `
-        /* 1. Gesamten Filter-Header & Suchleisten komplett vernichten */
-        .embed_jobs_head, .embed_jobs_head2, .embed_jobs_head3, 
-        .rec-job-search, .rec-search-container, header, .rec-search-inner {
-          display: none !important;
-        }
-        
-        /* 2. Label "Stellentyp" und das gedoppelte Wort "Vollzeit" entfernen */
-        .rec-job-type-label, .rec-job-type, [data-meta="jobtype"] {
-          display: none !important;
-        }
-
-        /* 3. Maximale Begrenzung: Blende alles ab der 6. Stelle gnadenlos aus */
-        .rec-job-list:nth-child(n+6), 
-        .cw-job-card:nth-child(n+6), 
-        .rec-job-item:nth-child(n+6),
-        li:nth-child(n+6) {
-          display: none !important;
-        }
-      `;
-      iframeDoc.head.appendChild(styleEl);
-      modifyIframeText(iframeDoc);
-    } catch (e) {
-      // Sicherheits-Catch falls Cross-Origin blockiert (hier unwahrscheinlich, da gleicher Kontext beim Widget)
-      console.log("Iframe-Zugriff verzögert...");
-    }
-  }
-
-  // Diese Unterfunktion repariert das zusammengeschriebene Datum ("05.07.2026Vollzeit") im iFrame
-  function modifyIframeText(iframeDoc) {
-    const dateElements = iframeDoc.querySelectorAll('.rec-job-date, .cw-job-date');
-    dateElements.forEach(el => {
-      if (el.getAttribute('data-separated') === 'true') return;
+      brand_color: "#C9B99A", 
+      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
       
-      const text = el.textContent.trim();
-      // Sucht nach dem Datumsformat DD.MM.YYYY
-      const match = text.match(/^(\d{2}\.\d{2}\.\d{4})(.*)$/);
-      if (match) {
-        const datePart = match[1];
-        const restPart = match[2].trim();
-        if (restPart) {
-          el.innerHTML = datePart + ' <span style="color: #C9B99A; margin: 0 8px; font-weight: bold;">I</span> ' + restPart;
-          el.setAttribute('data-separated', 'true');
-        }
-      }
+
+      extra_fields: ["date_posted", "jobtype"],
+      per_page: 5,              
+      sort_by: "date_posted",     
+      sort_order: "desc",       
+      
+      isSearchEnable: false,     
+      isFilterEnable: false
     });
   }
-
-  // Ein extrem schneller Taktgeber prüft und erzwingt das Design, sobald Zoho den iFrame generiert
-  const styleInforcer = setInterval(injectStylesIntoZoho, 100);
-  
-  // Nach 10 Sekunden stoppen wir den Intervall, um Performance zu sparen
-  setTimeout(() => clearInterval(styleInforcer), 10000);
 </script>
     
     <!-- ═══════════════════════════════════════════════
