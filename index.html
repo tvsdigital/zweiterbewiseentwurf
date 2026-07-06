@@ -1300,19 +1300,19 @@
   border-bottom: none; /* Letzte Zeile braucht keinen Strich drunter */
 }
 
-/* Job-Titel als Link gestylt mit deiner Display-Schriftart */
+/* Job-Titel als Link gestylt - Jetzt in Schwarz */
 .job-title-link {
   font-family: var(--font-display);
   font-size: 1.25rem;
-  font-weight: 400;
-  color: var(--black);
+  font-weight: 700;
+  color: #000000 !important; /* Erzwingt tiefes Schwarz */
   text-decoration: none;
   display: inline-block;
   margin-bottom: 6px;
-  transition: color var(--transition-fast, 0.2s) ease;
+  transition: opacity var(--transition-fast, 0.2s) ease;
 }
 .job-title-link:hover {
-  color: var(--cream, #C9B99A); /* Dezenter Hover-Effekt mit deiner Brand-Farbe */
+  opacity: 0.7; /* Ein dezenter Hover-Effekt statt Farbwechsel */
 }
 
 /* Standort-Zeile */
@@ -1320,6 +1320,7 @@
   font-size: 0.88rem;
   color: var(--grey-text);
   margin-bottom: 10px;
+  text-decoration: underline; 
 }
 
 /* Die Kurzbeschreibung aus dem Screenshot */
@@ -1353,10 +1354,16 @@
   font-size: 0.95rem;
 }
 
-    #custom-job-container iframe, 
+/* Radikaler Aufräumer: Blendet ALLES aus, was direkt von Zohos Styling kommt */
+#custom-job-container iframe, 
 #custom-job-container .rec-job-listing,
-.embed_jobs_head {
+#custom-job-container [id*="rec_job"], 
+.embed_jobs_head,
+.embed_jobs_border {
   display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  opacity: 0 !important;
 }
 
     /* ─────────────────────────────────────────────────────
