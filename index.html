@@ -1282,90 +1282,77 @@
   flex-wrap: wrap;
 }
 
-/* Der weiße Container, in dem die API-Jobs landen */
+/* Der weiße Container für die Jobs */
 .zoho-custom-card-wrapper {
-  background: var(--white);
-  border-radius: var(--radius-lg);
+  background: var(--white, #fff);
+  border-radius: var(--radius-lg, 12px);
   padding: 56px 48px;
-  box-shadow: var(--shadow-card);
-  min-height: 400px;
+  box-shadow: var(--shadow-card, 0 4px 20px rgba(0,0,0,0.05));
+  margin-bottom: 40px;
 }
 
-/* Die einzelnen Job-Zeilen, die das JavaScript generiert */
+/* Einzelne Job-Zeile */
 .custom-job-item {
   padding: 28px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 .custom-job-item:last-child {
-  border-bottom: none; /* Letzte Zeile braucht keinen Strich drunter */
+  border-bottom: none;
 }
 
-/* Job-Titel als Link gestylt - Jetzt in Schwarz */
+/* Job-Titel als Link – Garantiert Schwarz */
 .job-title-link {
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #000000 !important; /* Erzwingt tiefes Schwarz */
+  color: #000000 !important;
   text-decoration: none;
   display: inline-block;
   margin-bottom: 6px;
-  transition: opacity var(--transition-fast, 0.2s) ease;
+  transition: opacity 0.2s ease;
 }
 .job-title-link:hover {
-  opacity: 0.7; /* Ein dezenter Hover-Effekt statt Farbwechsel */
+  opacity: 0.7;
 }
 
-/* Standort-Zeile */
+/* Standort – Unterstrichen */
 .job-location {
   font-size: 0.88rem;
-  color: var(--grey-text);
+  color: var(--grey-text, #666);
   margin-bottom: 10px;
-  text-decoration: underline; 
+  text-decoration: underline !important;
 }
 
-/* Die Kurzbeschreibung aus dem Screenshot */
+/* Kurzbeschreibung */
 .job-summary {
   font-size: 0.92rem;
-  color: var(--black);
+  color: #333;
   line-height: 1.6;
   margin-bottom: 14px;
 }
 
-/* Die Meta-Zeile für Datum und Typ */
+/* Meta-Zeile (Datum I Typ) */
 .job-meta {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 0.82rem;
-  color: var(--grey-text);
+  color: var(--grey-text, #888);
 }
 
-/* Das gewünschte große "I" als Trenner */
+/* Das große trennende "I" */
 .job-meta-separator {
   color: var(--cream, #C9B99A);
   font-weight: 700;
 }
 
-/* Status-Anzeigen während des Ladens oder bei Fehlern */
 .job-loading, .job-error {
   text-align: center;
-  color: var(--grey-text);
+  color: var(--grey-text, #666);
   padding: 40px 0;
   font-size: 0.95rem;
 }
-
-/* Radikaler Aufräumer: Blendet ALLES aus, was direkt von Zohos Styling kommt */
-#custom-job-container iframe, 
-#custom-job-container .rec-job-listing,
-#custom-job-container [id*="rec_job"], 
-.embed_jobs_head,
-.embed_jobs_border {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  opacity: 0 !important;
-}
-
+    
     /* ─────────────────────────────────────────────────────
        SECTION: TESTIMONIALS
     ───────────────────────────────────────────────────── */
@@ -3056,99 +3043,81 @@ footer, .footer {
 
 </style>
 
-<script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
-
 <script type="text/javascript">
-document.addEventListener("DOMContentLoaded", function() {
+// Diese Funktion fängt die reinen Daten ab, sobald Zoho sie liefert
+function handleZohoJobs(response) {
   const container = document.getElementById('custom-job-container');
   if (!container) return;
 
-  if (typeof rec_embed_js !== 'undefined') {
-    
-    // Wir fangen die Rohdaten ab
-    rec_embed_js.renderJobList = function(jobListJSON) {
-      try {
-        const data = JSON.parse(jobListJSON);
-        
-        if (!data || data.length === 0) {
-          container.innerHTML = '<div class="job-loading">Zurzeit haben wir keine offenen Vakanzen.</div>';
-          return;
-        }
-
-        // Wir erstellen eine eigene, saubere Box NUR für unsere designten Jobs
-        // Damit trennen wir uns komplett von Zohos automatischen Elementen
-        let customHtml = '<div class="my-clean-jobs">';
-
-        // Maximal 5 Jobs durchlaufen
-        const limitedJobs = data.slice(0, 5);
-
-        limitedJobs.forEach(job => {
-          const title = job.jobtitle || 'Stellenangebot';
-          const city = job.city || '';
-          const province = job.state || '';
-          const country = job.country || 'Deutschland';
-          
-          const locationParts = [city, province, country].filter(part => part.trim() !== '');
-          const fullLocation = locationParts.join(', ');
-
-          let summary = job.summary || 'Klicken Sie auf Details, um mehr zu erfahren.';
-          summary = summary.replace(/<[^>]*>/g, '').substring(0, 220) + '...';
-
-          const jobUrl = job.permaLink || `https://1bewise-talents.zohorecruit.eu/jobs/Careers`;
-          const jobType = job.jobtype || 'Vollzeit';
-          const formattedDate = job.dateposted || '';
-
-          // Hier bauen wir deine Wunschzeile zusammen: "Datum I Typ"
-          customHtml += `
-            <div class="custom-job-item">
-              <a href="${jobUrl}" target="_blank" class="job-title-link">${title}</a>
-              <div class="job-location">${fullLocation}</div>
-              <div class="job-summary">${summary}</div>
-              <div class="job-meta">
-                <span>${formattedDate}</span>
-                <span class="job-meta-separator"> I </span>
-                <span>${jobType}</span>
-              </div>
-            </div>
-          `;
-        });
-
-        customHtml += '</div>';
-        container.innerHTML = customHtml;
-
-      } catch (e) {
-        console.error("Fehler beim Verarbeiten der Zoho-Daten:", e);
-        container.innerHTML = '<div class="job-error">Fehler bei der Datenverarbeitung.</div>';
-      }
-    };
-
-    // Trigger Zoho im Hintergrund
-    rec_embed_js.load({
-      widget_id: "custom-job-container",
-      page_name: "Karriere",
-      source: "CareerSite",
-      site: "https://1bewise-talents.zohorecruit.eu",
-      per_page: 5,              
-      sort_by: "date_posted",     
-      sort_order: "desc",       
-      isSearchEnable: false,     
-      isFilterEnable: false
-    });
-
-    // Ein Intervall, das alle Zoho-eigenen Iframes im Hintergrund sofort löscht, falls sie entstehen
-    const cleanInterval = setInterval(() => {
-      const iframes = container.querySelectorAll('iframe');
-      iframes.forEach(f => f.remove());
-      
-      const zohoList = container.querySelector('.rec-job-listing');
-      if (zohoList) zohoList.style.display = 'none';
-    }, 50);
-
-    // Nach 4 Sekunden stoppen wir die Suche, um Performance zu sparen
-    setTimeout(() => clearInterval(cleanInterval), 4000);
+  // Prüfen, ob Daten vorhanden sind
+  if (!response || !response.data || response.data.length === 0) {
+    container.innerHTML = '<div class="job-loading">Zurzeit haben wir keine offenen Vakanzen.</div>';
+    return;
   }
+
+  container.innerHTML = ''; // Lade-Meldung entfernen
+
+  // Sortieren nach Datum (neueste zuerst) und die ersten 5 abschneiden
+  const jobs = response.data
+    .sort((a, b) => new Date(b.Date_Posted) - new Date(a.Date_Posted))
+    .slice(0, 5);
+
+  jobs.forEach(job => {
+    const title = job.Job_Title || 'Stellenangebot';
+    const city = job.City || '';
+    const province = job.State || '';
+    const country = job.Country || 'Deutschland';
+    
+    // Standort formatieren
+    const locationParts = [city, province, country].filter(part => part.trim() !== '');
+    const fullLocation = locationParts.join(', ');
+
+    // Beschreibung säubern
+    let summary = job.Job_Description_Summary || 'Klicken Sie auf Details, um mehr zu erfahren.';
+    summary = summary.replace(/<[^>]*>/g, ''); 
+    if (summary.length > 220) summary = summary.substring(0, 220) + '...';
+
+    // Link generieren
+    const jobUrl = job.Job_Opening_URL || `https://1bewise-talents.zohorecruit.eu/jobs/Careers`;
+    const jobType = job.Job_Type || 'Vollzeit';
+    
+    // Datum von YYYY-MM-DD formatieren
+    let formattedDate = '';
+    if (job.Date_Posted) {
+      const dateObj = new Date(job.Date_Posted);
+      formattedDate = dateObj.toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+
+    // HTML-Struktur einfügen
+    const jobItem = document.createElement('div');
+    jobItem.className = 'custom-job-item';
+    jobItem.innerHTML = `
+      <a href="${jobUrl}" target="_blank" class="job-title-link">${title}</a>
+      <div class="job-location">${fullLocation}</div>
+      <div class="job-summary">${summary}</div>
+      <div class="job-meta">
+        <span>${formattedDate}</span>
+        <span class="job-meta-separator"> I </span>
+        <span>${jobType}</span>
+      </div>
+    `;
+    container.appendChild(jobItem);
+  });
+}
+
+// Wir laden die Zoho Daten als reines Datenpaket per Skript-Injektion (umgeht alle Sperren)
+document.addEventListener("DOMContentLoaded", function() {
+  const script = document.createElement('script');
+  script.src = "https://recruit.zoho.eu/recruit/v2/public/Job_Openings?callback=handleZohoJobs";
+  // Wichtig: Da deine Subdomain spezifisch ist, nutzen wir das zugehörige API-Gegenstück:
+  script.src = "https://1bewise-talents.zohorecruit.eu/recruit/v2/public/Job_Openings?callback=handleZohoJobs";
+  document.body.appendChild(script);
 });
 </script>
-
+        
 </body>
 </html>
