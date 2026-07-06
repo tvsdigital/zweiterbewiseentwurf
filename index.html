@@ -1282,7 +1282,7 @@
   flex-wrap: wrap;
 }
 
-/* Der weiße Container für die Jobs */
+/* Weißer Karten-Wrapper */
 .zoho-custom-card-wrapper {
   background: var(--white, #fff);
   border-radius: var(--radius-lg, 12px);
@@ -1291,7 +1291,7 @@
   margin-bottom: 40px;
 }
 
-/* Einzelne Job-Zeile */
+/* Einzelner Job-Eintrag in der Liste */
 .custom-job-item {
   padding: 28px 0;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -1300,7 +1300,7 @@
   border-bottom: none;
 }
 
-/* Job-Titel als Link – Garantiert Schwarz */
+/* Job-Titel – Garantiert in tiefem Schwarz */
 .job-title-link {
   font-family: var(--font-display), sans-serif;
   font-size: 1.25rem;
@@ -1315,7 +1315,7 @@
   opacity: 0.7;
 }
 
-/* Standort – Unterstrichen */
+/* Standort – Schön unterstrichen */
 .job-location {
   font-size: 0.88rem;
   color: var(--grey-text, #666);
@@ -1331,7 +1331,7 @@
   margin-bottom: 14px;
 }
 
-/* Meta-Zeile (Datum I Typ) */
+/* Meta-Daten Zeile (Datum & Typ) */
 .job-meta {
   display: flex;
   align-items: center;
@@ -1340,12 +1340,13 @@
   color: var(--grey-text, #888);
 }
 
-/* Das große trennende "I" */
+/* Das große trennende "I" mit Abständen */
 .job-meta-separator {
   color: var(--cream, #C9B99A);
   font-weight: 700;
 }
 
+/* Status-Meldungen */
 .job-loading, .job-error {
   text-align: center;
   color: var(--grey-text, #666);
@@ -3044,20 +3045,20 @@ footer, .footer {
 </style>
 
 <script type="text/javascript">
-// Diese Funktion fängt die reinen Daten ab, sobald Zoho sie liefert
+// Callback-Funktion verarbeitet die rohen JSON-Daten von Zoho
 function handleZohoJobs(response) {
   const container = document.getElementById('custom-job-container');
   if (!container) return;
 
-  // Prüfen, ob Daten vorhanden sind
+  // Falls keine Stellen offen sind
   if (!response || !response.data || response.data.length === 0) {
     container.innerHTML = '<div class="job-loading">Zurzeit haben wir keine offenen Vakanzen.</div>';
     return;
   }
 
-  container.innerHTML = ''; // Lade-Meldung entfernen
+  container.innerHTML = ''; // Lade-Text entfernen
 
-  // Sortieren nach Datum (neueste zuerst) und die ersten 5 abschneiden
+  // Sortiert nach Veröffentlichungsdatum und nimmt maximal die 5 neuesten Jobs
   const jobs = response.data
     .sort((a, b) => new Date(b.Date_Posted) - new Date(a.Date_Posted))
     .slice(0, 5);
@@ -3068,20 +3069,19 @@ function handleZohoJobs(response) {
     const province = job.State || '';
     const country = job.Country || 'Deutschland';
     
-    // Standort formatieren
+    // Standort-String bauen
     const locationParts = [city, province, country].filter(part => part.trim() !== '');
     const fullLocation = locationParts.join(', ');
 
-    // Beschreibung säubern
+    // HTML-Tags aus Kurzbeschreibung entfernen und auf 220 Zeichen begrenzen
     let summary = job.Job_Description_Summary || 'Klicken Sie auf Details, um mehr zu erfahren.';
     summary = summary.replace(/<[^>]*>/g, ''); 
     if (summary.length > 220) summary = summary.substring(0, 220) + '...';
 
-    // Link generieren
     const jobUrl = job.Job_Opening_URL || `https://1bewise-talents.zohorecruit.eu/jobs/Careers`;
     const jobType = job.Job_Type || 'Vollzeit';
     
-    // Datum von YYYY-MM-DD formatieren
+    // Datum sauber von YYYY-MM-DD in DD.MM.YYYY überführen
     let formattedDate = '';
     if (job.Date_Posted) {
       const dateObj = new Date(job.Date_Posted);
@@ -3092,7 +3092,7 @@ function handleZohoJobs(response) {
       });
     }
 
-    // HTML-Struktur einfügen
+    // Erstellt die exakte HTML-Struktur für das Frontend
     const jobItem = document.createElement('div');
     jobItem.className = 'custom-job-item';
     jobItem.innerHTML = `
@@ -3109,12 +3109,10 @@ function handleZohoJobs(response) {
   });
 }
 
-// Wir laden die Zoho Daten als reines Datenpaket per Skript-Injektion (umgeht alle Sperren)
+// Skript-Injektion startet den sicheren JSONP-Datenabruf bei Seitenaufruf
 document.addEventListener("DOMContentLoaded", function() {
   const script = document.createElement('script');
-  script.src = "https://recruit.zoho.eu/recruit/v2/public/Job_Openings?callback=handleZohoJobs";
-  // Wichtig: Da deine Subdomain spezifisch ist, nutzen wir das zugehörige API-Gegenstück:
-  script.src = "https://1bewise-talents.zohorecruit.eu/recruit/v2/public/Job_Openings?callback=handleZohoJobs";
+  script.src = "https://1bewise-talents.zohorecruit.eu/recruit/v2/public/Job_Openings?per_page=5&callback=handleZohoJobs";
   document.body.appendChild(script);
 });
 </script>
