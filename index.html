@@ -1263,96 +1263,95 @@
     /* ─────────────────────────────────────────────────────
        SECTION: STELLENANGEBOTE
     ───────────────────────────────────────────────────── */
-    #stellenangebote {
-      padding: 120px 6vw;
-      background: var(--cream-light);
-    }
+#stellenangebote {
+  padding: 120px 6vw;
+  background: var(--cream-light);
+}
 
-    .jobs-inner {
-      max-width: 1280px;
-      margin: 0 auto;
-    }
-    .jobs-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 56px;
-      gap: 32px;
-      flex-wrap: wrap;
-    }
+.jobs-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
 
-    /* Zoho Recruit integration placeholder */
-    .zoho-placeholder {
-      background: var(--white);
-      border-radius: var(--radius-lg);
-      padding: 56px 48px;
-      box-shadow: var(--shadow-card);
-      min-height: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
-    .zoho-note {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(201,185,154,0.15);
-      border: 1px solid var(--cream);
-      border-radius: var(--radius-sm);
-      padding: 10px 18px;
-      font-size: 0.78rem;
-      font-weight: 400;
-      color: var(--grey-text);
-      letter-spacing: 0.04em;
-    }
+.jobs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 56px;
+  gap: 32px;
+  flex-wrap: wrap;
+}
 
-    /* Job list preview */
-    .job-list { display: flex; flex-direction: column; gap: 2px; }
-    .job-item {
-      background: var(--grey-light);
-      border-radius: var(--radius-sm);
-      padding: 24px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      transition: background var(--transition-fast), transform var(--transition-fast);
-      cursor: pointer;
-    }
-    .job-item:hover {
-      background: var(--cream-light);
-      transform: translateX(4px);
-    }
-    .job-info { flex: 1; }
-    .job-title {
-      font-family: var(--font-display);
-      font-size: 1.15rem;
-      font-weight: 400;
-      color: var(--black);
-    }
-    .job-meta {
-      display: flex;
-      gap: 18px;
-      margin-top: 6px;
-      flex-wrap: wrap;
-    }
-    .job-meta-item {
-      font-size: 0.78rem;
-      color: var(--grey-text);
-      font-weight: 400;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .job-badge {
-      padding: 5px 14px;
-      border-radius: var(--radius-xl);
-      font-size: 0.73rem;
-      font-weight: 500;
-      background: var(--cream);
-      color: var(--black);
-      white-space: nowrap;
-    }
+/* Der weiße Container, in dem die API-Jobs landen */
+.zoho-custom-card-wrapper {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 56px 48px;
+  box-shadow: var(--shadow-card);
+  min-height: 400px;
+}
+
+/* Die einzelnen Job-Zeilen, die das JavaScript generiert */
+.custom-job-item {
+  padding: 28px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.custom-job-item:last-child {
+  border-bottom: none; /* Letzte Zeile braucht keinen Strich drunter */
+}
+
+/* Job-Titel als Link gestylt mit deiner Display-Schriftart */
+.job-title-link {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--black);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 6px;
+  transition: color var(--transition-fast, 0.2s) ease;
+}
+.job-title-link:hover {
+  color: var(--cream, #C9B99A); /* Dezenter Hover-Effekt mit deiner Brand-Farbe */
+}
+
+/* Standort-Zeile */
+.job-location {
+  font-size: 0.88rem;
+  color: var(--grey-text);
+  margin-bottom: 10px;
+}
+
+/* Die Kurzbeschreibung aus dem Screenshot */
+.job-summary {
+  font-size: 0.92rem;
+  color: var(--black);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+/* Die Meta-Zeile für Datum und Typ */
+.job-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: var(--grey-text);
+}
+
+/* Das gewünschte große "I" als Trenner */
+.job-meta-separator {
+  color: var(--cream, #C9B99A);
+  font-weight: 700;
+}
+
+/* Status-Anzeigen während des Ladens oder bei Fehlern */
+.job-loading, .job-error {
+  text-align: center;
+  color: var(--grey-text);
+  padding: 40px 0;
+  font-size: 0.95rem;
+}
 
     /* ─────────────────────────────────────────────────────
        SECTION: TESTIMONIALS
@@ -2457,8 +2456,8 @@ footer, .footer {
       </div>
     </section>
 
-<!-- ═══════════════════════════════════════════════
-     STELLENANGEBOTE (Clean & Custom Styled - Fixed)
+    <!-- ═══════════════════════════════════════════════
+     STELLENANGEBOTE
 ════════════════════════════════════════════════ -->
 
 <section id="stellenangebote" aria-labelledby="jobs-headline">
@@ -2472,7 +2471,9 @@ footer, .footer {
     </div>
 
     <div class="zoho-custom-card-wrapper reveal">
-      <div id="rec_job_listing_div"></div>
+      <div id="custom-job-container">
+        <div class="job-loading">Lade aktuelle Stellenangebote...</div>
+      </div>
     </div>
 
     <div class="initiativ-cta reveal">
@@ -2489,49 +2490,6 @@ footer, .footer {
     </div>
   </div>
 </section>
-
-<style>
-  
-  .zoho-custom-card-wrapper {
-    background: var(--white, #fff);
-    border-radius: var(--radius-lg, 12px);
-    padding: 40px 32px;
-    box-shadow: var(--shadow-card, 0 4px 20px rgba(0,0,0,0.05));
-    margin-bottom: 40px;
-  }
-
-  #rec_job_listing_div {
-    width: 100% !important;
-  }
-
-  #rec_job_listing_div iframe {
-    width: 100% !important;
-    border: none !important;
-    min-height: 450px !important; 
-  }
-</style>
-
-<script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
-<script type="text/javascript">
-  if (typeof rec_embed_js !== 'undefined') {
-    rec_embed_js.load({
-      widget_id: "rec_job_listing_div",
-      page_name: "Karriere",
-      source: "CareerSite",
-      site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#C9B99A", 
-      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
-      
-      // WICHTIG: Die extra_fields wurden gelöscht, damit "05.07.2026Vollzeit" verschwindet!
-      per_page: 5,              
-      sort_by: "date_posted",     
-      sort_order: "desc",       
-      
-      isSearchEnable: false,     
-      isFilterEnable: false
-    });
-  }
-</script>
     
     <!-- ═══════════════════════════════════════════════
          TESTIMONIALS
@@ -3089,15 +3047,75 @@ footer, .footer {
 
 </style>
 
-<script src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script>
-rec_embed_js.load({
-widget_id:"rec_job_listing_div",
-page_name:"Karriere",
-source:"CareerSite",
-site:"https://1bewise-talents.zohorecruit.eu",
-brand_color:"#C9B99A",
-empty_job_msg:"Aktuell sind keine Stellen ausgeschrieben."
+document.addEventListener("DOMContentLoaded", function() {
+  // Der offizielle Endpunkt für deine öffentlichen EU-Stellenanzeigen
+  const apiEndpoint = "https://1bewise-talents.zohorecruit.eu/recruit/v2/public/Job_Openings?per_page=5&sort_by=Date_Posted&sort_order=desc";
+  const container = document.getElementById('custom-job-container');
+
+  if (!container) return;
+
+  fetch(apiEndpoint)
+    .then(response => {
+      if (!response.ok) throw new Error('Fehler beim Abrufen der API');
+      return response.json();
+    })
+    .then(data => {
+      // Wenn keine Jobs da sind, Nachricht anzeigen
+      if (!data || !data.data || data.data.length === 0) {
+        container.innerHTML = '<div class="job-loading">Zurzeit haben wir keine offenen Vakanzen.</div>';
+        return;
+      }
+
+      container.innerHTML = ''; // Lade-Text entfernen
+
+      // Schleife durch die maximal 5 neuesten Jobs
+      data.data.forEach(job => {
+        const title = job.Job_Title || 'Stellenangebot';
+        const city = job.City || '';
+        const province = job.State || '';
+        const country = job.Country || 'Deutschland';
+        
+        // Standort sauber formatieren
+        const locationParts = [city, province, country].filter(part => part.trim() !== '');
+        const fullLocation = locationParts.join(', ');
+
+        const summary = job.Job_Description_Summary || 'Klicken Sie auf Details, um mehr zu erfahren.';
+        const jobUrl = job.Job_Opening_URL || `https://1bewise-talents.zohorecruit.eu/jobs/Careers/${job.id}`;
+        const jobType = job.Job_Type || 'Vollzeit';
+        
+        // Datum von YYYY-MM-DD in DD.MM.YYYY umwandeln
+        let formattedDate = '';
+        if (job.Date_Posted) {
+          const dateObj = new Date(job.Date_Posted);
+          formattedDate = dateObj.toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+        }
+
+        // HTML für das Stellenangebot erstellen
+        const jobItem = document.createElement('div');
+        jobItem.className = 'custom-job-item';
+        jobItem.innerHTML = `
+          <a href="${jobUrl}" target="_blank" class="job-title-link">${title}</a>
+          <div class="job-location">${fullLocation}</div>
+          <div class="job-summary">${summary}</div>
+          <div class="job-meta">
+            <span>${formattedDate}</span>
+            <span class="job-meta-separator">I</span>
+            <span>${jobType}</span>
+          </div>
+        `;
+        
+        container.appendChild(jobItem);
+      });
+    })
+    .catch(error => {
+      console.error('API Fehler:', error);
+      container.innerHTML = '<div class="job-error">Es gab ein Problem beim Laden der Stellenangebote. Bitte versuchen Sie es später erneut.</div>';
+    });
 });
 </script>
 
