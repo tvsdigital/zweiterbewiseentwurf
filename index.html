@@ -3040,82 +3040,102 @@ footer, .footer {
         transform: translateY(0);
       }
     }
-  
-#rec_job_listing_div{width:100%;min-height:900px;}
-.embed_jobs_head{background:transparent;}
-.embed_jobs_head3{background:#fff;border-radius:24px;overflow:hidden;box-shadow:var(--shadow-card);}
 
 </style>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Der offizielle Endpunkt für deine öffentlichen EU-Stellenanzeigen
-  const apiEndpoint = "https://1bewise-talents.zohorecruit.eu/recruit/v2/public/Job_Openings?per_page=5&sort_by=Date_Posted&sort_order=desc";
-  const container = document.getElementById('custom-job-container');
+<script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 
+<script type="text/javascript">
+document.addEventListener("DOMContentLoaded", function() {
+  const container = document.getElementById('custom-job-container');
   if (!container) return;
 
-  fetch(apiEndpoint)
-    .then(response => {
-      if (!response.ok) throw new Error('Fehler beim Abrufen der API');
-      return response.json();
-    })
-    .then(data => {
-      // Wenn keine Jobs da sind, Nachricht anzeigen
-      if (!data || !data.data || data.data.length === 0) {
-        container.innerHTML = '<div class="job-loading">Zurzeit haben wir keine offenen Vakanzen.</div>';
-        return;
-      }
-
-      container.innerHTML = ''; // Lade-Text entfernen
-
-      // Schleife durch die maximal 5 neuesten Jobs
-      data.data.forEach(job => {
-        const title = job.Job_Title || 'Stellenangebot';
-        const city = job.City || '';
-        const province = job.State || '';
-        const country = job.Country || 'Deutschland';
+  // Wir tricksen Zoho aus: Wir lassen es intern die Daten laden, fangen sie aber ab
+  if (typeof rec_embed_js !== 'undefined') {
+    
+    // Wir überschreiben die interne Render-Funktion von Zoho, um an die Rohdaten zu kommen!
+    const originalRender = rec_embed_js.renderJobList;
+    
+    rec_embed_js.renderJobList = function(jobListJSON) {
+      try {
+        const data = JSON.parse(jobListJSON);
         
-        // Standort sauber formatieren
-        const locationParts = [city, province, country].filter(part => part.trim() !== '');
-        const fullLocation = locationParts.join(', ');
-
-        const summary = job.Job_Description_Summary || 'Klicken Sie auf Details, um mehr zu erfahren.';
-        const jobUrl = job.Job_Opening_URL || `https://1bewise-talents.zohorecruit.eu/jobs/Careers/${job.id}`;
-        const jobType = job.Job_Type || 'Vollzeit';
-        
-        // Datum von YYYY-MM-DD in DD.MM.YYYY umwandeln
-        let formattedDate = '';
-        if (job.Date_Posted) {
-          const dateObj = new Date(job.Date_Posted);
-          formattedDate = dateObj.toLocaleDateString('de-DE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          });
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="job-loading">Zurzeit haben wir keine offenen Vakanzen.</div>';
+          return;
         }
 
-        // HTML für das Stellenangebot erstellen
-        const jobItem = document.createElement('div');
-        jobItem.className = 'custom-job-item';
-        jobItem.innerHTML = `
-          <a href="${jobUrl}" target="_blank" class="job-title-link">${title}</a>
-          <div class="job-location">${fullLocation}</div>
-          <div class="job-summary">${summary}</div>
-          <div class="job-meta">
-            <span>${formattedDate}</span>
-            <span class="job-meta-separator">I</span>
-            <span>${jobType}</span>
-          </div>
-        `;
-        
-        container.appendChild(jobItem);
-      });
-    })
-    .catch(error => {
-      console.error('API Fehler:', error);
-      container.innerHTML = '<div class="job-error">Es gab ein Problem beim Laden der Stellenangebote. Bitte versuchen Sie es später erneut.</div>';
+        container.innerHTML = ''; // Lade-Meldung löschen
+
+        // Maximal 5 Jobs anzeigen
+        const limitedJobs = data.slice(0, 5);
+
+        limitedJobs.forEach(job => {
+          // Datenfelder aus der Zoho-Struktur ziehen
+          const title = job.jobtitle || 'Stellenangebot';
+          const city = job.city || '';
+          const province = job.state || '';
+          const country = job.country || 'Deutschland';
+          
+          // Standort formatieren
+          const locationParts = [city, province, country].filter(part => part.trim() !== '');
+          const fullLocation = locationParts.join(', ');
+
+          // Kurzbeschreibung säubern (HTML-Tags entfernen, falls vorhanden)
+          let summary = job.summary || 'Klicken Sie auf Details, um mehr zu erfahren.';
+          summary = summary.replace(/<[^>]*>/g, '').substring(0, 220) + '...';
+
+          // Link zur Bewerbung
+          const jobUrl = job.permaLink || `https://1bewise-talents.zohorecruit.eu/jobs/Careers`;
+          
+          // Job-Typ (Vollzeit / Teilzeit)
+          const jobType = job.jobtype || 'Vollzeit';
+          
+          // Datum formatieren
+          let formattedDate = job.dateposted || '';
+
+          // HTML generieren
+          const jobItem = document.createElement('div');
+          jobItem.className = 'custom-job-item';
+          jobItem.innerHTML = `
+            <a href="${jobUrl}" target="_blank" class="job-title-link">${title}</a>
+            <div class="job-location">${fullLocation}</div>
+            <div class="job-summary">${summary}</div>
+            <div class="job-meta">
+              <span>${formattedDate}</span>
+              <span class="job-meta-separator">I</span>
+              <span>${jobType}</span>
+            </div>
+          `;
+          
+          container.appendChild(jobItem);
+        });
+
+      } catch (e) {
+        console.error("Fehler beim Verarbeiten der Zoho-Daten:", e);
+        container.innerHTML = '<div class="job-error">Fehler bei der Datenverarbeitung.</div>';
+      }
+    };
+
+    // Jetzt triggern wir den unsichtbaren Zoho-Ladevorgang im Hintergrund
+    rec_embed_js.load({
+      widget_id: "custom-job-container", // Lädt es direkt in deinen Container
+      page_name: "Karriere",
+      source: "CareerSite",
+      site: "https://1bewise-talents.zohorecruit.eu",
+      per_page: 5,              
+      sort_by: "date_posted",     
+      sort_order: "desc",       
+      isSearchEnable: false,     
+      isFilterEnable: false
     });
+
+    // CSS-Fix: Zoho versucht manchmal ein leeres iframe reinzudrücken, das verstecken wir
+    setTimeout(() => {
+      const iframe = container.querySelector('iframe');
+      if (iframe) iframe.style.display = 'none';
+    }, 200);
+  }
 });
 </script>
 
