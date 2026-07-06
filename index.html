@@ -3063,12 +3063,9 @@ document.addEventListener("DOMContentLoaded", function() {
   const container = document.getElementById('custom-job-container');
   if (!container) return;
 
-  // Wir tricksen Zoho aus: Wir lassen es intern die Daten laden, fangen sie aber ab
   if (typeof rec_embed_js !== 'undefined') {
     
-    // Wir überschreiben die interne Render-Funktion von Zoho, um an die Rohdaten zu kommen!
-    const originalRender = rec_embed_js.renderJobList;
-    
+    // Wir fangen die Rohdaten ab
     rec_embed_js.renderJobList = function(jobListJSON) {
       try {
         const data = JSON.parse(jobListJSON);
@@ -3078,51 +3075,46 @@ document.addEventListener("DOMContentLoaded", function() {
           return;
         }
 
-        container.innerHTML = ''; // Lade-Meldung löschen
+        // Wir erstellen eine eigene, saubere Box NUR für unsere designten Jobs
+        // Damit trennen wir uns komplett von Zohos automatischen Elementen
+        let customHtml = '<div class="my-clean-jobs">';
 
-        // Maximal 5 Jobs anzeigen
+        // Maximal 5 Jobs durchlaufen
         const limitedJobs = data.slice(0, 5);
 
         limitedJobs.forEach(job => {
-          // Datenfelder aus der Zoho-Struktur ziehen
           const title = job.jobtitle || 'Stellenangebot';
           const city = job.city || '';
           const province = job.state || '';
           const country = job.country || 'Deutschland';
           
-          // Standort formatieren
           const locationParts = [city, province, country].filter(part => part.trim() !== '');
           const fullLocation = locationParts.join(', ');
 
-          // Kurzbeschreibung säubern (HTML-Tags entfernen, falls vorhanden)
           let summary = job.summary || 'Klicken Sie auf Details, um mehr zu erfahren.';
           summary = summary.replace(/<[^>]*>/g, '').substring(0, 220) + '...';
 
-          // Link zur Bewerbung
           const jobUrl = job.permaLink || `https://1bewise-talents.zohorecruit.eu/jobs/Careers`;
-          
-          // Job-Typ (Vollzeit / Teilzeit)
           const jobType = job.jobtype || 'Vollzeit';
-          
-          // Datum formatieren
-          let formattedDate = job.dateposted || '';
+          const formattedDate = job.dateposted || '';
 
-          // HTML generieren
-          const jobItem = document.createElement('div');
-          jobItem.className = 'custom-job-item';
-          jobItem.innerHTML = `
-            <a href="${jobUrl}" target="_blank" class="job-title-link">${title}</a>
-            <div class="job-location">${fullLocation}</div>
-            <div class="job-summary">${summary}</div>
-            <div class="job-meta">
-              <span>${formattedDate}</span>
-              <span class="job-meta-separator">I</span>
-              <span>${jobType}</span>
+          // Hier bauen wir deine Wunschzeile zusammen: "Datum I Typ"
+          customHtml += `
+            <div class="custom-job-item">
+              <a href="${jobUrl}" target="_blank" class="job-title-link">${title}</a>
+              <div class="job-location">${fullLocation}</div>
+              <div class="job-summary">${summary}</div>
+              <div class="job-meta">
+                <span>${formattedDate}</span>
+                <span class="job-meta-separator"> I </span>
+                <span>${jobType}</span>
+              </div>
             </div>
           `;
-          
-          container.appendChild(jobItem);
         });
+
+        customHtml += '</div>';
+        container.innerHTML = customHtml;
 
       } catch (e) {
         console.error("Fehler beim Verarbeiten der Zoho-Daten:", e);
@@ -3130,9 +3122,9 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     };
 
-    // Jetzt triggern wir den unsichtbaren Zoho-Ladevorgang im Hintergrund
+    // Trigger Zoho im Hintergrund
     rec_embed_js.load({
-      widget_id: "custom-job-container", // Lädt es direkt in deinen Container
+      widget_id: "custom-job-container",
       page_name: "Karriere",
       source: "CareerSite",
       site: "https://1bewise-talents.zohorecruit.eu",
@@ -3143,11 +3135,17 @@ document.addEventListener("DOMContentLoaded", function() {
       isFilterEnable: false
     });
 
-    // CSS-Fix: Zoho versucht manchmal ein leeres iframe reinzudrücken, das verstecken wir
-    setTimeout(() => {
-      const iframe = container.querySelector('iframe');
-      if (iframe) iframe.style.display = 'none';
-    }, 200);
+    // Ein Intervall, das alle Zoho-eigenen Iframes im Hintergrund sofort löscht, falls sie entstehen
+    const cleanInterval = setInterval(() => {
+      const iframes = container.querySelectorAll('iframe');
+      iframes.forEach(f => f.remove());
+      
+      const zohoList = container.querySelector('.rec-job-listing');
+      if (zohoList) zohoList.style.display = 'none';
+    }, 50);
+
+    // Nach 4 Sekunden stoppen wir die Suche, um Performance zu sparen
+    setTimeout(() => clearInterval(cleanInterval), 4000);
   }
 });
 </script>
