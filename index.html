@@ -2468,11 +2468,10 @@ footer, .footer {
         <span class="label">Aktuelle Positionen</span>
         <h2 class="section-title" id="jobs-headline">Stellenangebote</h2>
       </div>
-      <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Anfragen <span class="arrow" aria-hidden="true">→</span></a>
+      <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Stellenangebote <span class="arrow" aria-hidden="true">→</span></a>
     </div>
 
-    <!-- Das originale Widget -->
-    <div class="zoho-custom-wrapper reveal">
+    <div class="zoho-custom-card-wrapper reveal">
       <div id="rec_job_listing_div"></div>
     </div>
 
@@ -2492,28 +2491,24 @@ footer, .footer {
 </section>
 
 <style>
-  .zoho-custom-wrapper {
-    width: 100%;
+  
+  .zoho-custom-card-wrapper {
+    background: var(--white, #fff);
+    border-radius: var(--radius-lg, 12px);
+    padding: 40px 32px;
+    box-shadow: var(--shadow-card, 0 4px 20px rgba(0,0,0,0.05));
     margin-bottom: 40px;
-    position: relative;
   }
 
   #rec_job_listing_div {
     width: 100% !important;
-    min-height: auto !important;
   }
 
   #rec_job_listing_div iframe {
     width: 100% !important;
     border: none !important;
-    min-height: 520px !important; 
+    min-height: 450px !important; 
   }
-
-  /* 
-    DER TRICK: Da Zoho uns das Datum an "Vollzeit" klebt und wir wegen der Rechte 
-    nicht ans Innere rankommen, geben wir dem gesamten Iframe-Block ein sauberes 
-    Erscheinungsbild über die umschließende Box, falls Zoho dort Klassen zulässt.
-  */
 </style>
 
 <script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
@@ -2527,8 +2522,7 @@ footer, .footer {
       brand_color: "#C9B99A", 
       empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
       
-      // Wir fordern die Extrafelder an
-      extra_fields: ["date_posted", "jobtype"],
+      // WICHTIG: Die extra_fields wurden gelöscht, damit "05.07.2026Vollzeit" verschwindet!
       per_page: 5,              
       sort_by: "date_posted",     
       sort_order: "desc",       
