@@ -2471,15 +2471,10 @@ footer, .footer {
       <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn btn-ghost">Alle Anfragen <span class="arrow" aria-hidden="true">→</span></a>
     </div>
 
+    <!-- Das originale Widget -->
     <div class="zoho-custom-wrapper reveal">
-      <div id="custom-job-listing" class="job-list">
-        <div class="zoho-placeholder">
-          <div class="zoho-note">Stellenangebote werden geladen...</div>
-        </div>
-      </div>
+      <div id="rec_job_listing_div"></div>
     </div>
-
-    <div id="rec_job_listing_div" style="display: none !important;"></div>
 
     <div class="initiativ-cta reveal">
       <div>
@@ -2497,135 +2492,33 @@ footer, .footer {
 </section>
 
 <style>
-  /* --- Dein Custom-Styling für den Stepstone-Look --- */
   .zoho-custom-wrapper {
     width: 100%;
     margin-bottom: 40px;
-  }
-  
-  .zoho-placeholder {
-    background: var(--white, #fff);
-    border-radius: var(--radius-lg, 12px);
-    padding: 56px 48px;
-    box-shadow: var(--shadow-card, 0 4px 20px rgba(0,0,0,0.05));
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 24px;
-  }
-  
-  .zoho-note {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(201,185,154,0.15);
-    border: 1px solid var(--cream, #C9B99A);
-    border-radius: var(--radius-sm, 4px);
-    padding: 10px 18px;
-    font-size: 0.78rem;
-    font-weight: 400;
-    color: var(--grey-text, #666);
-    letter-spacing: 0.04em;
+    position: relative;
   }
 
-  .job-list { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 16px; 
-  }
-  
-  .job-item {
-    background: var(--grey-light, #f9f9f9);
-    border-radius: var(--radius-sm, 6px);
-    padding: 24px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    transition: background 0.2s ease, transform 0.2s ease;
-    text-decoration: none;
-    color: inherit;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  }
-  
-  .job-item:hover {
-    background: var(--cream-light, #f5f1e9);
-    transform: translateX(4px);
-  }
-  
-  .job-info { flex: 1; }
-  
-  .job-title {
-    font-family: var(--font-display, inherit);
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--black, #111);
-    margin: 0 0 8px 0;
-  }
-  
-  .job-meta {
-    display: flex;
-    margin-top: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-    font-size: 0.85rem;
-    color: var(--grey-text, #666);
-  }
-  
-  /* Stepstone Feinschliff */
-  .job-location {
-    text-decoration: underline;
-  }
-  
-  .job-meta-separator {
-    margin: 0 10px;
-    color: #C9B99A;
-  }
-  
-  .job-date, .job-type {
-    display: inline-block;
+  #rec_job_listing_div {
+    width: 100% !important;
+    min-height: auto !important;
   }
 
-  .job-badge {
-    padding: 8px 18px;
-    border-radius: var(--radius-xl, 50px);
-    font-size: 0.78rem;
-    font-weight: 500;
-    background: var(--cream, #C9B99A);
-    color: #fff;
-    white-space: nowrap;
+  #rec_job_listing_div iframe {
+    width: 100% !important;
+    border: none !important;
+    min-height: 520px !important; 
   }
+
+  /* 
+    DER TRICK: Da Zoho uns das Datum an "Vollzeit" klebt und wir wegen der Rechte 
+    nicht ans Innere rankommen, geben wir dem gesamten Iframe-Block ein sauberes 
+    Erscheinungsbild über die umschließende Box, falls Zoho dort Klassen zulässt.
+  */
 </style>
 
 <script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script type="text/javascript">
-  // Funktion zur Berechnung von "vor X Tagen"
-  function parseAndCalculateDays(dateString) {
-    if (!dateString) return "Vor kurzem inseriert";
-    
-    // Erkennt deutsches Format DD.MM.YYYY
-    let parts = dateString.split('.');
-    let postedDate;
-    if (parts.length === 3) {
-      postedDate = new Date(parts[2], parts[1] - 1, parts[0]);
-    } else {
-      postedDate = new Date(dateString);
-    }
-    
-    const currentDate = new Date();
-    const diffTime = Math.abs(currentDate - postedDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (isNaN(diffDays)) return "Vor kurzem inseriert";
-    if (diffDays === 0) return "Heute erstellt";
-    if (diffDays === 1) return "vor 1 Tag";
-    return `vor ${diffDays} Tagen`;
-  }
-
   if (typeof rec_embed_js !== 'undefined') {
-    // Zoho-Widget im Hintergrund triggern
     rec_embed_js.load({
       widget_id: "rec_job_listing_div",
       page_name: "Karriere",
@@ -2633,61 +2526,16 @@ footer, .footer {
       site: "https://1bewise-talents.zohorecruit.eu",
       brand_color: "#C9B99A", 
       empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
+      
+      // Wir fordern die Extrafelder an
       extra_fields: ["date_posted", "jobtype"],
       per_page: 5,              
       sort_by: "date_posted",     
       sort_order: "desc",       
+      
       isSearchEnable: false,     
       isFilterEnable: false
     });
-
-    // Intervall prüft, wann das offizielle Zoho-Skript seine Daten fertig geladen hat
-    let checkZohoData = setInterval(() => {
-      if (rec_embed_js.jobOpeningArray && rec_embed_js.jobOpeningArray.length > 0) {
-        clearInterval(checkZohoData); // Überprüfung stoppen
-        
-        const container = document.getElementById('custom-job-listing');
-        container.innerHTML = ''; // Platzhalter entfernen
-        
-        // Daten auslesen und in dein schönes Stepstone-Design gießen
-        rec_embed_js.jobOpeningArray.forEach(job => {
-          const title = job.jobopeningname || "Stellenangebot";
-          const city = job.city || "Deutschland";
-          const jobType = job.jobtype || "Vollzeit";
-          const rawDate = job.dateposted;
-          const jobId = job.jobopeningid;
-          
-          const relativeDate = parseAndCalculateDays(rawDate);
-          const jobUrl = `https://1bewise-talents.zohorecruit.eu/jobs/Careers/${jobId}`;
-          
-          const jobHtml = `
-            <a href="${jobUrl}" target="_blank" class="job-item">
-              <div class="job-info">
-                <h3 class="job-title">${title}</h3>
-                <div class="job-meta">
-                  <span class="job-location">${city}</span>
-                  <span class="job-meta-separator">I</span>
-                  <span class="job-date">${relativeDate}</span>
-                  <span class="job-meta-separator">I</span>
-                  <span class="job-type">${jobType}</span>
-                </div>
-              </div>
-              <div class="job-badge">Jetzt ansehen →</div>
-            </a>
-          `;
-          container.innerHTML += jobHtml;
-        });
-      }
-    }, 100);
-
-    // Automatischer Timeout nach 5 Sekunden, falls keine Stellen offen sind
-    setTimeout(() => {
-      clearInterval(checkZohoData);
-      const container = document.getElementById('custom-job-listing');
-      if (container.querySelector('.zoho-placeholder')) {
-        container.innerHTML = '<div class="zoho-placeholder"><div class="zoho-note">Zurzeit haben wir keine offenen Vakanzen.</div></div>';
-      }
-    }, 5000);
   }
 </script>
     
