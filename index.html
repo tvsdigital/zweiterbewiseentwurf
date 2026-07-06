@@ -2479,8 +2479,6 @@ footer, .footer {
       </div>
     </div>
 
-    <div id="rec_job_listing_div" style="opacity: 0 !important; position: absolute !important; pointer-events: none !important; height: 0 !important; overflow: hidden !important;"></div>
-
     <div class="initiativ-cta reveal">
       <div>
         <h3>Keine passende Position dabei? <br>
@@ -2497,7 +2495,7 @@ footer, .footer {
 </section>
 
 <style>
-  /* --- Dein Custom-Layout --- */
+  /* --- Dein schickes Custom-Layout --- */
   .zoho-custom-wrapper {
     width: 100%;
     margin-bottom: 40px;
@@ -2574,7 +2572,7 @@ footer, .footer {
     color: var(--grey-text, #666);
   }
   
-  /* Stepstone Anpassungen */
+  /* Stepstone Details */
   .job-location {
     text-decoration: underline;
   }
@@ -2599,17 +2597,15 @@ footer, .footer {
   }
 </style>
 
-<script type="text/javascript" src="https://static.zohocdn.com/recruit/embed_careers_site/javascript/v1.1/embed_jobs.js"></script>
 <script type="text/javascript">
-  // Funktion zur sicheren Berechnung von "vor X Tagen"
-  function parseAndCalculateDays(dateString) {
+  // Rechnet das Datum (z.B. "2026-07-05") präzise um
+  function getStepstoneDateString(dateString) {
     if (!dateString) return "Vor kurzem inseriert";
-    let parts = dateString.match(/(\d+)/g);
-    if (!parts || parts.length < 3) return "Vor kurzem inseriert";
     
-    // Erkennt deutsches Format DD.MM.YYYY oder YYYY-MM-DD
-    let postedDate = parts[0].length === 4 ? new Date(parts[0], parts[1]-1, parts[2]) : new Date(parts[2], parts[1]-1, parts[0]);
+    const postedDate = new Date(dateString);
     const currentDate = new Date();
+    
+    // Zeitdifferenz berechnen
     const diffTime = Math.abs(currentDate - postedDate);
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
@@ -2619,71 +2615,70 @@ footer, .footer {
     return `vor ${diffDays} Tagen`;
   }
 
-  if (typeof rec_embed_js !== 'undefined') {
-    // Startet das originale Laden von Zoho völlig normal
-    rec_embed_js.load({
-      widget_id: "rec_job_listing_div",
-      page_name: "Karriere",
-      source: "CareerSite",
-      site: "https://1bewise-talents.zohorecruit.eu",
-      brand_color: "#C9B99A", 
-      empty_job_msg: "Zurzeit haben wir keine offenen Vakanzen.",
-      extra_fields: ["date_posted", "jobtype"],
-      per_page: 5,              
-      sort_by: "date_posted",     
-      sort_order: "desc",       
-      isSearchEnable: false,     
-      isFilterEnable: false
-    });
-
-    // Wir warten, bis Zoho die Daten im globalen Array abgelegt hat
-    let checkInterval = setInterval(() => {
-      if (rec_embed_js.jobOpeningArray && rec_embed_js.jobOpeningArray.length > 0) {
-        clearInterval(checkInterval); // Intervall stoppen
-        
-        const container = document.getElementById('custom-job-listing');
-        container.innerHTML = '';
-        
-        // Wir bauen deine Job-Karten aus den geladenen Daten
-        rec_embed_js.jobOpeningArray.forEach(job => {
-          const title = job.jobopeningname || "Stellenangebot";
-          const city = job.city || "Deutschland";
-          const jobType = job.jobtype || "Vollzeit";
-          const rawDate = job.dateposted;
-          const jobId = job.jobopeningid;
-          
-          const relativeDate = parseAndCalculateDays(rawDate);
-          const jobUrl = `https://1bewise-talents.zohorecruit.eu/jobs/Careers/${jobId}`;
-          
-          const jobHtml = `
-            <a href="${jobUrl}" target="_blank" class="job-item">
-              <div class="job-info">
-                <h3 class="job-title">${title}</h3>
-                <div class="job-meta">
-                  <span class="job-location">${city}</span>
-                  <span class="job-meta-separator">I</span>
-                  <span class="job-date">${relativeDate}</span>
-                  <span class="job-meta-separator">I</span>
-                  <span class="job-type">${jobType}</span>
-                </div>
-              </div>
-              <div class="job-badge">Jetzt bewerben →</div>
-            </a>
-          `;
-          container.innerHTML += jobHtml;
-        });
-      }
-    }, 100);
-
-    // Sicherheits-Timeout nach 6 Sekunden, falls keine Jobs da sind
-    setTimeout(() => {
-      clearInterval(checkInterval);
-      const container = document.getElementById('custom-job-listing');
-      if (container.querySelector('.zoho-placeholder')) {
+  async function loadJobsViaProxy() {
+    const container = document.getElementById('custom-job-listing');
+    
+    // Die originale API-URL von Zoho
+    const zohoApiUrl = "https://1bewise-talents.zohorecruit.eu/recruit/v2/public/Job_Openings?per_page=5&sort_by=date_posted&sort_order=desc";
+    
+    // Wir jagen die URL durch den CORS-Proxy, um die Sperre im Browser auszuhebeln
+    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(zohoApiUrl);
+    
+    try {
+      const response = await fetch(proxyUrl);
+      if (!response.ok) throw new Error('Fehler beim Abruf');
+      
+      const result = await response.json();
+      const jobs = result.data || [];
+      
+      if (jobs.length === 0) {
         container.innerHTML = '<div class="zoho-placeholder"><div class="zoho-note">Zurzeit haben wir keine offenen Vakanzen.</div></div>';
+        return;
       }
-    }, 6000);
+      
+      container.innerHTML = '';
+      
+      // Schleife durch alle Jobs für dein sauberes HTML-Template
+      jobs.forEach(job => {
+        const title = job.Job_Title || "Stellenangebot";
+        const city = job.City || "Deutschland";
+        const jobType = job.Job_Type || "Vollzeit";
+        const rawDate = job.Date_Opened || job.Created_Time;
+        
+        const relativeDate = getStepstoneDateString(rawDate);
+        const jobUrl = `https://1bewise-talents.zohorecruit.eu/jobs/Careers/${job.id}`;
+        
+        const jobHtml = `
+          <a href="${jobUrl}" target="_blank" class="job-item">
+            <div class="job-info">
+              <h3 class="job-title">${title}</h3>
+              <div class="job-meta">
+                <span class="job-location">${city}</span>
+                <span class="job-meta-separator">I</span>
+                <span class="job-date">${relativeDate}</span>
+                <span class="job-meta-separator">I</span>
+                <span class="job-type">${jobType}</span>
+              </div>
+            </div>
+            <div class="job-badge">Jetzt ansehen →</div>
+          </a>
+        `;
+        container.innerHTML += jobHtml;
+      });
+      
+    } catch (error) {
+      console.error("API-Fehler:", error);
+      container.innerHTML = `
+        <div class="zoho-placeholder">
+          <div class="zoho-note">Stellenangebote konnten nicht direkt geladen werden.</div>
+          <a href="https://1bewise-talents.zohorecruit.eu/jobs/Careers" target="_blank" class="btn-pill" style="text-decoration:none; margin-top:10px;">Zu allen Stellenangeboten →</a>
+        </div>
+      `;
+    }
   }
+
+  // Code starten, wenn das Dokument bereit ist
+  document.addEventListener("DOMContentLoaded", loadJobsViaProxy);
 </script>
     
     <!-- ═══════════════════════════════════════════════
